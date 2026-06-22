@@ -17,7 +17,7 @@ import {
   serviceOutcome,
   UPGRADE_DEFS,
 } from "./rules";
-import { hitTestCanvas } from "./layout";
+import { hitTestCanvas, OVERLAY_BUTTON_RECT, rectContains } from "./layout";
 
 const MAX_LOG_LINES = 6;
 
@@ -248,7 +248,11 @@ export function handleCanvasClick(
   y: number,
 ): GameState {
   if (state.mode === "menu") {
-    return startNextDay(state);
+    return rectContains(OVERLAY_BUTTON_RECT, x, y) ? startNextDay(state) : state;
+  }
+
+  if (state.mode === "dayEnd") {
+    return rectContains(OVERLAY_BUTTON_RECT, x, y) ? startNextDay(state) : state;
   }
 
   if (state.mode !== "playing") {

@@ -42,9 +42,9 @@ export interface UpgradeDef {
 export const STATIONS: StationDef[] = [
   {
     id: "suite",
-    label: "Safe Suites",
-    shortLabel: "Suites",
-    description: "Quiet beds, locked menus, and calm breakfast trays.",
+    label: "Human Safe Suite",
+    shortLabel: "Human Suite",
+    description: "Quiet Human beds, locked menus, and calm breakfast trays.",
     color: "#48494b",
   },
   {
@@ -80,59 +80,38 @@ export const STATIONS: StationDef[] = [
 export const UPGRADE_DEFS: UpgradeDef[] = [
   {
     id: "bioreactorSpeed",
-    label: "Faster Bioreactor",
-    description: "Zombie meals finish faster and pay more.",
+    label: "Bioreactor Bay",
+    description: "Adds vat space and makes Zombie meals finish faster.",
     maxLevel: 3,
     baseCost: 24,
   },
   {
     id: "extraRooms",
-    label: "Extra Safe Room",
-    description: "Safe Suites can serve more guests at once.",
+    label: "Human Suite Wing",
+    description: "Adds more protected Human room space.",
     maxLevel: 2,
     baseCost: 30,
   },
   {
-    id: "oceanLine",
-    label: "Ocean Fishing Line",
-    description: "Cat chow earns extra coins from fresh fish.",
-    maxLevel: 2,
-    baseCost: 18,
-  },
-  {
     id: "scrapChowStation",
-    label: "Scrap-Chow Station",
-    description: "Cat service is faster and keeps Human risk down.",
+    label: "Cat Chow Counter",
+    description: "Adds fish-chow space and speeds Cat service.",
     maxLevel: 2,
     baseCost: 22,
   },
   {
     id: "alienCleanRoom",
-    label: "Alien Clean-Room Suite",
-    description: "Aliens stay happier and calibrate vats for longer.",
+    label: "Alien Clean-Room Bay",
+    description: "Adds sterile Alien space and improves calibration service.",
     maxLevel: 2,
     baseCost: 34,
   },
   {
     id: "agentTerminal",
-    label: "Agent Front-Desk Terminal",
-    description: "Agents process faster and trigger better rush bonuses.",
+    label: "Agent Desk Terminal",
+    description: "Adds secure desk space and speeds Agent service.",
     maxLevel: 2,
     baseCost: 32,
-  },
-  {
-    id: "patienceBoost",
-    label: "Warm Lobby Lamps",
-    description: "All guests wait longer before losing patience.",
-    maxLevel: 3,
-    baseCost: 20,
-  },
-  {
-    id: "vipBell",
-    label: "VIP Service Bell",
-    description: "Aliens and Agents become easier to satisfy.",
-    maxLevel: 1,
-    baseCost: 42,
   },
 ];
 
@@ -248,6 +227,22 @@ export function getStationCapacity(
     return 1 + upgrades.extraRooms;
   }
 
+  if (stationId === "bioreactor") {
+    return 1 + Math.floor(upgrades.bioreactorSpeed / 2);
+  }
+
+  if (stationId === "cleanRoom") {
+    return 1 + upgrades.alienCleanRoom;
+  }
+
+  if (stationId === "frontDesk") {
+    return 1 + upgrades.agentTerminal;
+  }
+
+  if (stationId === "fishery") {
+    return 1 + upgrades.scrapChowStation;
+  }
+
   return 1;
 }
 
@@ -256,9 +251,7 @@ export function getPatienceSeconds(
   upgrades: UpgradeLevels,
 ): number {
   const rule = getGuestRule(type);
-  const vipBonus =
-    upgrades.vipBell > 0 && (type === "Alien" || type === "Agent") ? 4 : 0;
-  return rule.patienceSeconds + upgrades.patienceBoost * 3 + vipBonus;
+  return rule.patienceSeconds;
 }
 
 export function getServiceDurationSeconds(
@@ -293,10 +286,6 @@ export function getServiceDurationSeconds(
 
   if (effects.agentRushActive) {
     duration *= 0.86;
-  }
-
-  if (upgrades.vipBell > 0 && (type === "Alien" || type === "Agent")) {
-    duration *= 0.9;
   }
 
   return Math.max(2.2, Number(duration.toFixed(2)));
@@ -351,7 +340,7 @@ export function serviceOutcome(
   }
 
   if (type === "Cat") {
-    coins += upgrades.oceanLine * 3 + upgrades.scrapChowStation * 2;
+    coins += upgrades.scrapChowStation * 2;
     notes.push("Fish-blended scraps kept Cat cravings harmless.");
   }
 

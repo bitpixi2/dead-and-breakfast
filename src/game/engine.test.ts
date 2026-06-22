@@ -22,9 +22,21 @@ describe("game engine", () => {
 
   it("clicking menu canvas starts play", () => {
     const state = createGameState(FALLBACK_GUESTS, createDefaultSave());
-    const next = handleCanvasClick(state, 500, 300);
+    const next = handleCanvasClick(state, 500, 350);
 
     expect(next.mode).toBe("playing");
+  });
+
+  it("clicking the day-end overlay button starts the next day", () => {
+    const state = {
+      ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
+      mode: "dayEnd" as const,
+      day: 1,
+    };
+    const next = handleCanvasClick(state, 500, 350);
+
+    expect(next.mode).toBe("playing");
+    expect(next.day).toBe(2);
   });
 
   it("removes guests after they lose patience", () => {

@@ -2,6 +2,7 @@ import type { CanvasStats, GameState, NormieGuest, StationId } from "../types";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  OVERLAY_BUTTON_RECT,
   queueRectForIndex,
   STATION_RECTS,
 } from "./layout";
@@ -28,9 +29,9 @@ export function drawGame(
   drawFooter(ctx, state);
 
   if (state.mode === "menu") {
-    drawOverlay(ctx, "Dead and Breakfast", "Click the inn to open for the day.");
+    drawOverlay(ctx, "Dead and Breakfast", "Start day");
   } else if (state.mode === "dayEnd") {
-    drawOverlay(ctx, "Day Complete", "Buy upgrades, then start the next day.");
+    drawOverlay(ctx, "Day Complete", "Start next day");
   }
 }
 
@@ -106,19 +107,27 @@ function drawQueue(
     const rule = getGuestRule(guest.type);
     const selected = state.selectedGuestId === guest.id;
 
-    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8, "#f8f9f7");
+    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8, selected ? "#252628" : "#f8f9f7");
     ctx.strokeStyle = selected ? "#111214" : rule.color;
-    ctx.lineWidth = selected ? 4 : 2;
+    ctx.lineWidth = selected ? 6 : 2;
     ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (selected) {
+      ctx.strokeStyle = "#f8f9f7";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
+      ctx.fillStyle = "#f8f9f7";
+      ctx.font = "900 10px system-ui, sans-serif";
+      ctx.fillText("SELECTED", rect.x + rect.w - 70, rect.y + 18);
+    }
 
     drawGuestImage(ctx, guest.guest, images, rect.x + 12, rect.y + 12, 50);
 
-    ctx.fillStyle = "#252628";
+    ctx.fillStyle = selected ? "#f8f9f7" : "#252628";
     ctx.font = "800 14px system-ui, sans-serif";
     ctx.fillText(`${guest.type} #${guest.guest.tokenId}`, rect.x + 72, rect.y + 24);
 
     ctx.font = "600 11px system-ui, sans-serif";
-    ctx.fillStyle = "#696b6c";
+    ctx.fillStyle = selected ? "#d7dad9" : "#696b6c";
     ctx.fillText(rule.serviceName, rect.x + 72, rect.y + 42);
 
     drawBar(
@@ -128,7 +137,7 @@ function drawQueue(
       130,
       9,
       guest.patience / guest.maxPatience,
-      rule.color,
+      selected ? "#f8f9f7" : rule.color,
     );
   });
 }
@@ -139,6 +148,11 @@ function drawStations(
   images: ImageMap,
   roomIcons?: HTMLImageElement,
 ): void {
+  const selectedGuest = state.queue.find((guest) => guest.id === state.selectedGuestId);
+  const preferredStationId = selectedGuest
+    ? getGuestRule(selectedGuest.type).preferredStation
+    : null;
+
   for (const [stationIndex, station] of STATIONS.entries()) {
     const rect = STATION_RECTS[station.id];
     const active = state.services.filter(
@@ -146,10 +160,19 @@ function drawStations(
     );
     const capacity = getStationCapacity(station.id, state.upgrades);
 
-    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 10, "#f8f9f7");
+    const isPreferred = preferredStationId === station.id;
+    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 10, isPreferred ? "#eef0ef" : "#f8f9f7");
     ctx.strokeStyle = station.color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = isPreferred ? 7 : 3;
     ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (isPreferred) {
+      ctx.strokeStyle = "#f8f9f7";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
+      ctx.fillStyle = "#252628";
+      ctx.font = "900 10px system-ui, sans-serif";
+      ctx.fillText("SEND HERE", rect.x + rect.w - 80, rect.y + 42);
+    }
 
     ctx.fillStyle = station.color;
     ctx.font = "800 16px system-ui, sans-serif";
@@ -264,19 +287,32 @@ function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
 function drawOverlay(
   ctx: CanvasRenderingContext2D,
   title: string,
-  subtitle: string,
+  buttonLabel: string,
 ): void {
   ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
   ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
-  roundedRect(ctx, 322, 230, 456, 154, 12, "#f8f9f7");
+  roundedRect(ctx, 322, 220, 456, 194, 12, "#f8f9f7");
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 4;
-  ctx.strokeRect(322, 230, 456, 154);
+  ctx.strokeRect(322, 220, 456, 194);
   ctx.fillStyle = "#252628";
   ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
-  ctx.fillText(title, 366, 292);
+  ctx.fillText(title, 366, 282);
   ctx.font = "700 16px system-ui, sans-serif";
-  ctx.fillText(subtitle, 376, 332);
+  ctx.fillText("Serve each type in its matching room.", 386, 314);
+
+  roundedRect(
+    ctx,
+    OVERLAY_BUTTON_RECT.x,
+    OVERLAY_BUTTON_RECT.y,
+    OVERLAY_BUTTON_RECT.w,
+    OVERLAY_BUTTON_RECT.h,
+    8,
+    "#252628",
+  );
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 17px system-ui, sans-serif";
+  ctx.fillText(buttonLabel, OVERLAY_BUTTON_RECT.x + 52, OVERLAY_BUTTON_RECT.y + 28);
 }
 
 function drawGuestImage(

@@ -250,7 +250,7 @@ export async function loadStarterRoster(
     status,
     message:
       status === "live"
-        ? "Live Normies API roster loaded."
+        ? "Roster ready."
         : `Using ${status} roster. ${errors.slice(0, 2).join(" ")}`,
   };
 }

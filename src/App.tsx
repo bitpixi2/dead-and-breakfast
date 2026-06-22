@@ -31,7 +31,6 @@ import {
   saveFromGameState,
   writeGameSave,
 } from "./save";
-import type { ApiLoadResult } from "./normiesApi";
 import type { CanvasStats, GameSaveV1, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
@@ -52,9 +51,6 @@ export default function App() {
   const [game, setGame] = useState<GameState>(() =>
     createGameState(undefined, initialSave.current),
   );
-  const [apiStatus, setApiStatus] =
-    useState<ApiLoadResult["status"]>("fallback");
-  const [apiMessage, setApiMessage] = useState("Loading Normies API roster...");
   const [stats, setStats] = useState<CanvasStats | null>(null);
   const [tokenId, setTokenId] = useState("");
   const [lookupMessage, setLookupMessage] = useState("");
@@ -65,8 +61,6 @@ export default function App() {
     let cancelled = false;
     void loadStarterRoster({ storage: localStorage }).then((result) => {
       if (cancelled) return;
-      setApiStatus(result.status);
-      setApiMessage(result.message);
       setStats(result.stats);
       setGame((current) => setRoster(current, result.guests));
     });
@@ -198,14 +192,6 @@ export default function App() {
       </section>
 
       <aside className="side-panel">
-        <section className="panel-section status-card">
-          <span className={`status-dot status-${apiStatus}`} />
-          <div>
-            <h2>Live Roster</h2>
-            <p>{apiMessage}</p>
-          </div>
-        </section>
-
         <section className="panel-section">
           <h2>Invite Normie</h2>
           <form className="lookup-form" onSubmit={handleLookup}>

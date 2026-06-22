@@ -22,6 +22,8 @@ export const STATION_RECTS: Record<StationId, Rect> = {
   fishery: { x: 556, y: 304, w: 238, h: 106 },
 };
 
+export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
+
 export type HitTarget =
   | { kind: "guest"; guestId: string }
   | { kind: "station"; stationId: StationId }
@@ -34,6 +36,10 @@ function contains(rect: Rect, x: number, y: number): boolean {
     y >= rect.y &&
     y <= rect.y + rect.h
   );
+}
+
+export function rectContains(rect: Rect, x: number, y: number): boolean {
+  return contains(rect, x, y);
 }
 
 export function queueRectForIndex(index: number): Rect {
