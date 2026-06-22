@@ -53,35 +53,9 @@ button:disabled {
   min-width: 0;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.eyebrow {
-  margin: 0 0 3px;
-  color: var(--pixel);
-  font-size: 0.77rem;
-  font-weight: 900;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-h1,
 h2,
 p {
   margin-top: 0;
-}
-
-h1 {
-  margin-bottom: 0;
-  color: var(--ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: clamp(1.5rem, 2.6vw, 2.35rem);
-  letter-spacing: 0;
 }
 
 h2 {
@@ -89,13 +63,6 @@ h2 {
   font-size: 1rem;
 }
 
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.primary-button,
 .icon-button,
 .upgrade-card {
   border: 2px solid transparent;
@@ -107,17 +74,6 @@ h2 {
     background-color 120ms ease;
 }
 
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 0 16px;
-  background: var(--pixel);
-  color: var(--paper);
-  font-weight: 900;
-}
-
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -127,7 +83,6 @@ h2 {
   border-color: rgba(72, 73, 75, 0.24);
 }
 
-.primary-button:hover,
 .icon-button:hover,
 .upgrade-card:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -306,11 +261,6 @@ h2 {
 @media (max-width: 680px) {
   .app-shell {
     padding: 10px;
-  }
-
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .side-panel {

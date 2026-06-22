@@ -4,8 +4,6 @@ import {
   ClipboardCheck,
   Fish,
   FlaskConical,
-  Play,
-  RotateCcw,
   Search,
   Sparkles,
 } from "lucide-react";
@@ -19,18 +17,11 @@ import {
   inviteGuestNow,
   renderGameToText,
   setRoster,
-  startNextDay,
   updateGame,
 } from "./game/engine";
 import { getUpgradeCost, UPGRADE_DEFS } from "./game/rules";
 import { fetchNormieGuest, loadStarterRoster } from "./normiesApi";
-import {
-  clearGameSave,
-  createDefaultSave,
-  loadGameSave,
-  saveFromGameState,
-  writeGameSave,
-} from "./save";
+import { loadGameSave, saveFromGameState, writeGameSave } from "./save";
 import type { CanvasStats, GameSaveV1, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
@@ -122,14 +113,6 @@ export default function App() {
     game.upgrades,
   ]);
 
-  const startDay = () => setGame((current) => startNextDay(current));
-  const resetProgress = () => {
-    clearGameSave();
-    const freshSave = createDefaultSave();
-    setSave(freshSave);
-    setGame((current) => createGameState(current.roster, freshSave));
-  };
-
   const handleLookup = async (event: React.FormEvent) => {
     event.preventDefault();
     const id = Number(tokenId);
@@ -158,30 +141,6 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className="game-column">
-        <div className="topbar">
-          <div>
-            <p className="eyebrow">Normies API game</p>
-            <h1>Dead and Breakfast</h1>
-          </div>
-          <div className="topbar-actions">
-            <button className="primary-button" onClick={startDay}>
-              <Play size={18} aria-hidden="true" />
-              {game.mode === "dayEnd"
-                ? "Next day"
-                : game.mode === "menu"
-                  ? "Open inn"
-                  : "Restart day"}
-            </button>
-            <button
-              className="icon-button"
-              onClick={resetProgress}
-              title="Reset local progress"
-            >
-              <RotateCcw size={18} aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-
         <CanvasStage
           state={game}
           stats={stats}
@@ -194,7 +153,11 @@ export default function App() {
       <aside className="side-panel">
         <section className="panel-section">
           <h2>Invite Normie</h2>
-          <form className="lookup-form" onSubmit={handleLookup}>
+          <form
+            className="lookup-form"
+            onSubmit={handleLookup}
+            aria-label="Invite Normie"
+          >
             <input
               value={tokenId}
               onChange={(event) => setTokenId(event.target.value)}
@@ -206,7 +169,11 @@ export default function App() {
               <Search size={18} aria-hidden="true" />
             </button>
           </form>
-          {lookupMessage && <p className="form-note">{lookupMessage}</p>}
+          {lookupMessage && (
+            <p className="form-note" role="status">
+              {lookupMessage}
+            </p>
+          )}
         </section>
 
         <section className="panel-section compact-stats">
