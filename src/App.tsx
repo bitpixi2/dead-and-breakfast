@@ -1,0 +1,281 @@
+import { useEffect, useRef, useState } from "react";
+import {
+  BedDouble,
+  ClipboardCheck,
+  Fish,
+  FlaskConical,
+  Play,
+  RotateCcw,
+  Search,
+  Sparkles,
+} from "lucide-react";
+import { CanvasStage } from "./CanvasStage";
+import {
+  addGuestToRoster,
+  advanceGame,
+  buyUpgrade,
+  createGameState,
+  handleCanvasClick,
+  inviteGuestNow,
+  renderGameToText,
+  setRoster,
+  startNextDay,
+  updateGame,
+} from "./game/engine";
+import { getUpgradeCost, UPGRADE_DEFS } from "./game/rules";
+import { fetchNormieGuest, loadStarterRoster } from "./normiesApi";
+import {
+  clearGameSave,
+  createDefaultSave,
+  loadGameSave,
+  saveFromGameState,
+  writeGameSave,
+} from "./save";
+import type { ApiLoadResult } from "./normiesApi";
+import type { CanvasStats, GameSaveV1, GameState, UpgradeLevels } from "./types";
+import "./styles.css";
+
+const iconByUpgrade: Record<keyof UpgradeLevels, typeof FlaskConical> = {
+  bioreactorSpeed: FlaskConical,
+  extraRooms: BedDouble,
+  oceanLine: Fish,
+  scrapChowStation: Fish,
+  alienCleanRoom: Sparkles,
+  agentTerminal: ClipboardCheck,
+  patienceBoost: Sparkles,
+  vipBell: Sparkles,
+};
+
+export default function App() {
+  const initialSave = useRef(loadGameSave());
+  const [save, setSave] = useState<GameSaveV1>(() => initialSave.current);
+  const [game, setGame] = useState<GameState>(() =>
+    createGameState(undefined, initialSave.current),
+  );
+  const [apiStatus, setApiStatus] =
+    useState<ApiLoadResult["status"]>("fallback");
+  const [apiMessage, setApiMessage] = useState("Loading Normies API roster...");
+  const [stats, setStats] = useState<CanvasStats | null>(null);
+  const [tokenId, setTokenId] = useState("");
+  const [lookupMessage, setLookupMessage] = useState("");
+  const gameRef = useRef(game);
+  const saveRef = useRef(save);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadStarterRoster({ storage: localStorage }).then((result) => {
+      if (cancelled) return;
+      setApiStatus(result.status);
+      setApiMessage(result.message);
+      setStats(result.stats);
+      setGame((current) => setRoster(current, result.guests));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    gameRef.current = game;
+  }, [game]);
+
+  useEffect(() => {
+    saveRef.current = save;
+  }, [save]);
+
+  useEffect(() => {
+    window.render_game_to_text = () => renderGameToText(gameRef.current);
+    window.advanceTime = (ms: number) => {
+      setGame((current) => {
+        const next = advanceGame(current, ms);
+        gameRef.current = next;
+        return next;
+      });
+    };
+
+    return () => {
+      delete window.render_game_to_text;
+      delete window.advanceTime;
+    };
+  }, []);
+
+  useEffect(() => {
+    let frame = 0;
+    let previous = performance.now();
+    const loop = (time: number) => {
+      const delta = Math.min(180, time - previous);
+      previous = time;
+      setGame((current) => updateGame(current, delta));
+      frame = requestAnimationFrame(loop);
+    };
+
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const nextSave = saveFromGameState(game, saveRef.current);
+    setSave(nextSave);
+    writeGameSave(nextSave);
+  }, [
+    game.bestScore,
+    game.coins,
+    game.day,
+    game.reputation,
+    game.roster,
+    game.score,
+    game.upgrades,
+  ]);
+
+  const startDay = () => setGame((current) => startNextDay(current));
+  const resetProgress = () => {
+    clearGameSave();
+    const freshSave = createDefaultSave();
+    setSave(freshSave);
+    setGame((current) => createGameState(current.roster, freshSave));
+  };
+
+  const handleLookup = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const id = Number(tokenId);
+    if (!Number.isInteger(id) || id < 0 || id > 9999) {
+      setLookupMessage("Enter a token ID from 0 to 9999.");
+      return;
+    }
+
+    setLookupMessage(`Inviting Normie #${id}...`);
+    try {
+      const guest = await fetchNormieGuest(id, { storage: localStorage });
+      setGame((current) =>
+        current.mode === "playing"
+          ? inviteGuestNow(current, guest)
+          : addGuestToRoster(current, { ...guest, source: "manual" }),
+      );
+      setLookupMessage(`${guest.name} joined as ${guest.type}.`);
+      setTokenId("");
+    } catch (error) {
+      setLookupMessage(
+        error instanceof Error ? error.message : "Could not load that Normie.",
+      );
+    }
+  };
+
+  return (
+    <main className="app-shell">
+      <section className="game-column">
+        <div className="topbar">
+          <div>
+            <p className="eyebrow">Normies API game</p>
+            <h1>Dead and Breakfast</h1>
+          </div>
+          <div className="topbar-actions">
+            <button className="primary-button" onClick={startDay}>
+              <Play size={18} aria-hidden="true" />
+              {game.mode === "dayEnd"
+                ? "Next day"
+                : game.mode === "menu"
+                  ? "Open inn"
+                  : "Restart day"}
+            </button>
+            <button
+              className="icon-button"
+              onClick={resetProgress}
+              title="Reset local progress"
+            >
+              <RotateCcw size={18} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <CanvasStage
+          state={game}
+          stats={stats}
+          onCanvasClick={(x, y) =>
+            setGame((current) => handleCanvasClick(current, x, y))
+          }
+        />
+      </section>
+
+      <aside className="side-panel">
+        <section className="panel-section status-card">
+          <span className={`status-dot status-${apiStatus}`} />
+          <div>
+            <h2>Live Roster</h2>
+            <p>{apiMessage}</p>
+          </div>
+        </section>
+
+        <section className="panel-section">
+          <h2>Invite Normie</h2>
+          <form className="lookup-form" onSubmit={handleLookup}>
+            <input
+              value={tokenId}
+              onChange={(event) => setTokenId(event.target.value)}
+              inputMode="numeric"
+              placeholder="Token ID"
+              aria-label="Normie token ID"
+            />
+            <button type="submit" className="icon-button" title="Invite token">
+              <Search size={18} aria-hidden="true" />
+            </button>
+          </form>
+          {lookupMessage && <p className="form-note">{lookupMessage}</p>}
+        </section>
+
+        <section className="panel-section compact-stats">
+          <h2>Local Progress</h2>
+          <dl>
+            <div>
+              <dt>Best</dt>
+              <dd>{save.bestScore}</dd>
+            </div>
+            <div>
+              <dt>Discovered</dt>
+              <dd>{save.discoveredTokenIds.length}</dd>
+            </div>
+            <div>
+              <dt>Served</dt>
+              <dd>{game.served}</dd>
+            </div>
+            <div>
+              <dt>Missed</dt>
+              <dd>{game.missed}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="panel-section">
+          <h2>Upgrades</h2>
+          <div className="upgrade-list">
+            {UPGRADE_DEFS.map((upgrade) => {
+              const level = game.upgrades[upgrade.id];
+              const cost = getUpgradeCost(upgrade, level);
+              const Icon = iconByUpgrade[upgrade.id];
+              const maxed = level >= upgrade.maxLevel;
+              return (
+                <button
+                  key={upgrade.id}
+                  className="upgrade-card"
+                  disabled={maxed || game.coins < cost}
+                  onClick={() =>
+                    setGame((current) => buyUpgrade(current, upgrade.id))
+                  }
+                >
+                  <Icon size={20} aria-hidden="true" />
+                  <span>
+                    <strong>{upgrade.label}</strong>
+                    <small>
+                      {maxed ? "Maxed" : `${cost} coins`} · Lv {level}/
+                      {upgrade.maxLevel}
+                    </small>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </aside>
+    </main>
+  );
+}

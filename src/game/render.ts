@@ -1,0 +1,360 @@
+import type { CanvasStats, GameState, NormieGuest, StationId } from "../types";
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  queueRectForIndex,
+  STATION_RECTS,
+} from "./layout";
+import {
+  getGuestRule,
+  getStationCapacity,
+  STATIONS,
+} from "./rules";
+
+type ImageMap = Map<string, HTMLImageElement>;
+
+export function drawGame(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+  stats: CanvasStats | null,
+  roomIcons?: HTMLImageElement,
+): void {
+  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBackground(ctx);
+  drawHeader(ctx, state, stats);
+  drawQueue(ctx, state, images);
+  drawStations(ctx, state, images, roomIcons);
+  drawFooter(ctx, state);
+
+  if (state.mode === "menu") {
+    drawOverlay(ctx, "Dead and Breakfast", "Click the inn to open for the day.");
+  } else if (state.mode === "dayEnd") {
+    drawOverlay(ctx, "Day Complete", "Buy upgrades, then start the next day.");
+  }
+}
+
+function drawBackground(ctx: CanvasRenderingContext2D): void {
+  const grd = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  grd.addColorStop(0, "#f8f9f7");
+  grd.addColorStop(0.42, "#e3e5e4");
+  grd.addColorStop(1, "#d7dad9");
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  ctx.fillStyle = "#48494b";
+  ctx.fillRect(0, 0, CANVAS_WIDTH, 70);
+  ctx.fillStyle = "#e3e5e4";
+  ctx.fillRect(28, 26, 72, 18);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(0, 68, CANVAS_WIDTH, 4);
+
+  ctx.fillStyle = "rgba(72, 73, 75, 0.08)";
+  ctx.fillRect(282, 96, 800, 350);
+  ctx.fillStyle = "rgba(72, 73, 75, 0.12)";
+  ctx.fillRect(28, 96, 246, 484);
+}
+
+function drawHeader(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  stats: CanvasStats | null,
+): void {
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "700 25px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("DEAD AND BREAKFAST", 120, 42);
+
+  ctx.font = "700 16px system-ui, sans-serif";
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillText(`Day ${state.day}`, 494, 31);
+  ctx.fillText(`${state.coins} coins`, 574, 31);
+  ctx.fillText(`Rep ${state.reputation}`, 680, 31);
+  ctx.fillText(`Score ${state.score}`, 774, 31);
+
+  ctx.fillStyle = "#e3e5e4";
+  const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
+  ctx.fillText(state.mode === "playing" ? `${timeLeft}s` : "Ready", 900, 31);
+
+  if (stats) {
+    ctx.font = "600 12px system-ui, sans-serif";
+    ctx.fillStyle = "#d7dad9";
+    ctx.fillText(
+      `Live Canvas: ${stats.totalZombies} Zombies / ${stats.totalTransforms} transforms`,
+      494,
+      52,
+    );
+  }
+}
+
+function drawQueue(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+): void {
+  ctx.fillStyle = "#252628";
+  ctx.font = "800 17px system-ui, sans-serif";
+  ctx.fillText("Guest Queue", 36, 112);
+
+  if (state.queue.length === 0) {
+    ctx.fillStyle = "#696b6c";
+    ctx.font = "600 14px system-ui, sans-serif";
+    ctx.fillText("The lobby is quiet.", 48, 162);
+  }
+
+  state.queue.slice(0, 5).forEach((guest, index) => {
+    const rect = queueRectForIndex(index);
+    const rule = getGuestRule(guest.type);
+    const selected = state.selectedGuestId === guest.id;
+
+    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 8, "#f8f9f7");
+    ctx.strokeStyle = selected ? "#111214" : rule.color;
+    ctx.lineWidth = selected ? 4 : 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+
+    drawGuestImage(ctx, guest.guest, images, rect.x + 12, rect.y + 12, 50);
+
+    ctx.fillStyle = "#252628";
+    ctx.font = "800 14px system-ui, sans-serif";
+    ctx.fillText(`${guest.type} #${guest.guest.tokenId}`, rect.x + 72, rect.y + 24);
+
+    ctx.font = "600 11px system-ui, sans-serif";
+    ctx.fillStyle = "#696b6c";
+    ctx.fillText(rule.serviceName, rect.x + 72, rect.y + 42);
+
+    drawBar(
+      ctx,
+      rect.x + 72,
+      rect.y + 52,
+      130,
+      9,
+      guest.patience / guest.maxPatience,
+      rule.color,
+    );
+  });
+}
+
+function drawStations(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+  roomIcons?: HTMLImageElement,
+): void {
+  for (const [stationIndex, station] of STATIONS.entries()) {
+    const rect = STATION_RECTS[station.id];
+    const active = state.services.filter(
+      (service) => service.stationId === station.id,
+    );
+    const capacity = getStationCapacity(station.id, state.upgrades);
+
+    roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 10, "#f8f9f7");
+    ctx.strokeStyle = station.color;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+
+    ctx.fillStyle = station.color;
+    ctx.font = "800 16px system-ui, sans-serif";
+    ctx.fillText(station.label, rect.x + 14, rect.y + 24);
+    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 76, rect.y + 38, 58);
+    ctx.fillStyle = "#696b6c";
+    ctx.font = "600 11px system-ui, sans-serif";
+    ctx.fillText(`${active.length}/${capacity} busy`, rect.x + rect.w - 74, rect.y + 24);
+
+    if (active.length === 0) {
+      ctx.fillStyle = "#696b6c";
+      ctx.font = "600 12px system-ui, sans-serif";
+      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 100, 15);
+    }
+
+    active.slice(0, 2).forEach((service, index) => {
+      const y = rect.y + 42 + index * 31;
+      drawGuestImage(ctx, service.guest, images, rect.x + 14, y - 9, 28);
+      ctx.fillStyle = "#252628";
+      ctx.font = "800 12px system-ui, sans-serif";
+      ctx.fillText(`${service.type} #${service.guest.tokenId}`, rect.x + 50, y + 2);
+      drawBar(
+        ctx,
+        rect.x + 50,
+        y + 10,
+        rect.w - 68,
+        9,
+        1 - service.remaining / service.total,
+        service.correct ? station.color : "#111214",
+      );
+    });
+  }
+
+  drawEffects(ctx, state);
+}
+
+function drawRoomIcon(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement | undefined,
+  index: number,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  ctx.save();
+  ctx.globalAlpha = 0.82;
+  ctx.imageSmoothingEnabled = false;
+
+  if (image?.complete && image.naturalWidth > 0) {
+    const tileWidth = image.naturalWidth / 5;
+    ctx.drawImage(
+      image,
+      tileWidth * index,
+      0,
+      tileWidth,
+      image.naturalHeight,
+      x,
+      y,
+      size,
+      size,
+    );
+  } else {
+    ctx.strokeStyle = "#48494b";
+    ctx.strokeRect(x, y, size, size);
+    ctx.fillStyle = "#48494b";
+    ctx.fillRect(x + size * 0.35, y + size * 0.35, size * 0.3, size * 0.3);
+  }
+
+  ctx.restore();
+}
+
+function drawEffects(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const active: string[] = [];
+  if (state.alienCalibrationUntil > state.dayTime) {
+    active.push("Alien calibration");
+  }
+  if (state.agentRushUntil > state.dayTime) {
+    active.push("Agent rush");
+  }
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "800 15px system-ui, sans-serif";
+  ctx.fillText("Active Bonuses", 830, 304);
+  ctx.font = "700 13px system-ui, sans-serif";
+  if (active.length === 0) {
+    ctx.fillStyle = "#696b6c";
+    ctx.fillText("Serve Aliens and Agents well.", 830, 330);
+  } else {
+    active.forEach((label, index) => {
+      ctx.fillStyle = index === 0 ? "#252628" : "#48494b";
+      ctx.fillText(label, 830, 330 + index * 22);
+    });
+  }
+}
+
+function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
+  roundedRect(ctx, 300, 470, 760, 146, 10, "rgba(248, 249, 247, 0.9)");
+  ctx.fillStyle = "#252628";
+  ctx.font = "800 15px system-ui, sans-serif";
+  ctx.fillText("Inn Ledger", 322, 498);
+  ctx.font = "600 13px system-ui, sans-serif";
+  state.log.slice(0, 5).forEach((line, index) => {
+    ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
+    ctx.fillText(line, 322, 524 + index * 20);
+  });
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "700 12px system-ui, sans-serif";
+  ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
+}
+
+function drawOverlay(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  subtitle: string,
+): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
+  ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
+  roundedRect(ctx, 322, 230, 456, 154, 12, "#f8f9f7");
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(322, 230, 456, 154);
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText(title, 366, 292);
+  ctx.font = "700 16px system-ui, sans-serif";
+  ctx.fillText(subtitle, 376, 332);
+}
+
+function drawGuestImage(
+  ctx: CanvasRenderingContext2D,
+  guest: NormieGuest,
+  images: ImageMap,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  const image = images.get(guest.imageUrl);
+  ctx.fillStyle = "#e3e5e4";
+  ctx.fillRect(x, y, size, size);
+
+  if (image?.complete && image.naturalWidth > 0) {
+    ctx.drawImage(image, x, y, size, size);
+  } else {
+    ctx.fillStyle = getGuestRule(guest.type).color;
+    ctx.fillRect(x + size * 0.2, y + size * 0.2, size * 0.6, size * 0.6);
+  }
+
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, size, size);
+}
+
+function drawBar(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  value: number,
+  color: string,
+): void {
+  ctx.fillStyle = "#d7dad9";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, Math.max(0, Math.min(1, value)) * w, h);
+}
+
+function roundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  fill: string,
+): void {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+): void {
+  const words = text.split(" ");
+  let line = "";
+  let lineIndex = 0;
+  for (const word of words) {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      ctx.fillText(line, x, y + lineIndex * lineHeight);
+      line = word;
+      lineIndex += 1;
+    } else {
+      line = testLine;
+    }
+  }
+  if (line) {
+    ctx.fillText(line, x, y + lineIndex * lineHeight);
+  }
+}
