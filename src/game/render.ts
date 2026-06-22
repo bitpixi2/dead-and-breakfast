@@ -177,15 +177,15 @@ function drawStations(
     ctx.fillStyle = station.color;
     ctx.font = "800 16px system-ui, sans-serif";
     ctx.fillText(station.label, rect.x + 14, rect.y + 24);
-    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 76, rect.y + 38, 58);
+    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 88, rect.y + 30, 70);
     ctx.fillStyle = "#696b6c";
     ctx.font = "600 11px system-ui, sans-serif";
     ctx.fillText(`${active.length}/${capacity} busy`, rect.x + rect.w - 74, rect.y + 24);
 
     if (active.length === 0) {
       ctx.fillStyle = "#696b6c";
-      ctx.font = "600 12px system-ui, sans-serif";
-      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 100, 15);
+      ctx.font = "600 11px system-ui, sans-serif";
+      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 116, 13);
     }
 
     active.slice(0, 2).forEach((service, index) => {
@@ -223,12 +223,15 @@ function drawRoomIcon(
 
   if (image?.complete && image.naturalWidth > 0) {
     const tileWidth = image.naturalWidth / 5;
+    const sourceSize = Math.min(tileWidth, image.naturalHeight);
+    const sourceX = tileWidth * index + (tileWidth - sourceSize) / 2;
+    const sourceY = (image.naturalHeight - sourceSize) / 2;
     ctx.drawImage(
       image,
-      tileWidth * index,
-      0,
-      tileWidth,
-      image.naturalHeight,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
       x,
       y,
       size,
@@ -269,19 +272,63 @@ function drawEffects(ctx: CanvasRenderingContext2D, state: GameState): void {
 }
 
 function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
-  roundedRect(ctx, 300, 470, 760, 146, 10, "rgba(248, 249, 247, 0.9)");
+  ctx.fillStyle = "rgba(248, 249, 247, 0.9)";
+  ctx.fillRect(300, 470, 760, 146);
+  ctx.strokeStyle = "rgba(72, 73, 75, 0.18)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(300, 470, 760, 146);
+
+  drawOpenBookSprite(ctx, 324, 494, 52);
+
   ctx.fillStyle = "#252628";
   ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("Inn Ledger", 322, 498);
+  ctx.fillText("Inn Ledger", 392, 498);
   ctx.font = "600 13px system-ui, sans-serif";
   state.log.slice(0, 5).forEach((line, index) => {
     ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
-    ctx.fillText(line, 322, 524 + index * 20);
+    ctx.fillText(line, 392, 524 + index * 20);
   });
 
   ctx.fillStyle = "#252628";
   ctx.font = "700 12px system-ui, sans-serif";
   ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
+}
+
+function drawOpenBookSprite(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  const unit = size / 13;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#e3e5e4";
+  ctx.fillRect(x, y + unit, size, size - unit * 2);
+
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(x, y + unit * 2, unit, unit * 9);
+  ctx.fillRect(x + unit * 12, y + unit * 2, unit, unit * 9);
+  ctx.fillRect(x + unit, y + unit, unit * 4, unit);
+  ctx.fillRect(x + unit * 8, y + unit, unit * 4, unit);
+  ctx.fillRect(x + unit, y + unit * 11, unit * 4, unit);
+  ctx.fillRect(x + unit * 8, y + unit * 11, unit * 4, unit);
+  ctx.fillRect(x + unit * 6, y + unit * 2, unit, unit * 9);
+
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(x + unit * 2, y + unit * 2, unit * 3, unit * 9);
+  ctx.fillRect(x + unit * 8, y + unit * 2, unit * 3, unit * 9);
+  ctx.fillRect(x + unit * 5, y + unit * 3, unit, unit * 7);
+  ctx.fillRect(x + unit * 7, y + unit * 3, unit, unit * 7);
+
+  ctx.fillStyle = "#696b6c";
+  ctx.fillRect(x + unit * 3, y + unit * 4, unit * 2, unit);
+  ctx.fillRect(x + unit * 3, y + unit * 7, unit * 2, unit);
+  ctx.fillRect(x + unit * 8, y + unit * 5, unit * 2, unit);
+  ctx.fillRect(x + unit * 8, y + unit * 8, unit * 2, unit);
+
+  ctx.restore();
 }
 
 function drawOverlay(
