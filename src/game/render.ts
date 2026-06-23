@@ -19,10 +19,12 @@ export function drawGame(
   images: ImageMap,
   _stats: CanvasStats | null,
   roomIcons?: HTMLImageElement,
+  headerLogo?: HTMLImageElement,
+  menuMark?: HTMLImageElement,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
-  drawHeader(ctx, state);
+  drawHeader(ctx, state, headerLogo);
   drawQueue(ctx, state, images);
   drawStations(ctx, state, images, roomIcons);
   drawFooter(ctx, state);
@@ -33,9 +35,9 @@ export function drawGame(
   }
 
   if (state.mode === "menu") {
-    drawOverlay(ctx, "Dead and Breakfast", "Start day");
+    drawOverlay(ctx, "Dead and Breakfast", "Start day", menuMark);
   } else if (state.mode === "dayEnd") {
-    drawOverlay(ctx, "Day Complete", "Start next day");
+    drawOverlay(ctx, "Day Complete", "Start next day", menuMark);
   }
 }
 
@@ -49,8 +51,6 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
 
   ctx.fillStyle = "#48494b";
   ctx.fillRect(0, 0, CANVAS_WIDTH, 70);
-  ctx.fillStyle = "#e3e5e4";
-  ctx.fillRect(28, 26, 72, 18);
   ctx.fillStyle = "#252628";
   ctx.fillRect(0, 68, CANVAS_WIDTH, 4);
 
@@ -63,10 +63,9 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
 function drawHeader(
   ctx: CanvasRenderingContext2D,
   state: GameState,
+  headerLogo?: HTMLImageElement,
 ): void {
-  ctx.fillStyle = "#f8f9f7";
-  ctx.font = "700 25px ui-monospace, SFMono-Regular, Menlo, monospace";
-  ctx.fillText("DEAD AND BREAKFAST", 120, 42);
+  drawHeaderLogo(ctx, headerLogo);
 
   const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
   const status = state.paused
@@ -92,11 +91,27 @@ function drawHeader(
   }
 }
 
+function drawHeaderLogo(
+  ctx: CanvasRenderingContext2D,
+  headerLogo?: HTMLImageElement,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (headerLogo?.complete && headerLogo.naturalWidth > 0) {
+    ctx.drawImage(headerLogo, 16, 8, 390, 54);
+  } else {
+    ctx.fillStyle = "#f8f9f7";
+    ctx.font = "900 20px ui-monospace, SFMono-Regular, Menlo, monospace";
+    ctx.fillText("DEAD & BREAKFAST", 28, 42);
+  }
+  ctx.restore();
+}
+
 function drawHeaderMetrics(
   ctx: CanvasRenderingContext2D,
   metrics: Array<{ label: string; value: string; alert?: boolean }>,
 ): void {
-  let x = 430;
+  let x = 435;
   const y = 40;
 
   metrics.forEach((metric) => {
@@ -463,6 +478,7 @@ function drawOverlay(
   ctx: CanvasRenderingContext2D,
   title: string,
   buttonLabel: string,
+  menuMark?: HTMLImageElement,
 ): void {
   ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
   ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
@@ -470,11 +486,12 @@ function drawOverlay(
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 4;
   ctx.strokeRect(322, 220, 456, 194);
+  drawMenuMark(ctx, menuMark);
   ctx.fillStyle = "#252628";
-  ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
-  drawCenteredText(ctx, title, 550, 282);
+  ctx.font = "900 30px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText(title, 360, 281);
   ctx.font = "700 16px system-ui, sans-serif";
-  drawCenteredText(ctx, "Serve each type in its matching room.", 550, 314);
+  ctx.fillText("Serve each type in its matching room.", 360, 314);
 
   ctx.fillStyle = "#111214";
   ctx.fillRect(
@@ -506,6 +523,30 @@ function drawOverlay(
     OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
     OVERLAY_BUTTON_RECT.y + 28,
   );
+}
+
+function drawMenuMark(
+  ctx: CanvasRenderingContext2D,
+  menuMark?: HTMLImageElement,
+): void {
+  const x = 694;
+  const y = 228;
+  const size = 78;
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (menuMark?.complete && menuMark.naturalWidth > 0) {
+    ctx.drawImage(menuMark, x, y, size, size);
+  } else {
+    ctx.strokeStyle = "#252628";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size * 0.52, size * 0.3, Math.PI, 0);
+    ctx.stroke();
+    ctx.fillStyle = "#252628";
+    ctx.fillRect(x + size * 0.18, y + size * 0.56, size * 0.64, 5);
+  }
+  ctx.restore();
 }
 
 function drawPauseOverlay(ctx: CanvasRenderingContext2D): void {

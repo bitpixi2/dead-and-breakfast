@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from "react";
 import type { CanvasStats, GameState } from "./types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./game/layout";
 import { drawGame } from "./game/render";
+import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
+import menuMarkUrl from "./assets/dead-breakfast-platter-logomark.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
 
 interface CanvasStageProps {
@@ -24,6 +26,8 @@ export function CanvasStage({
         ...state.roster.map((guest) => guest.imageUrl),
         ...state.queue.map((guest) => guest.guest.imageUrl),
         ...state.services.map((service) => service.guest.imageUrl),
+        headerLogoUrl,
+        menuMarkUrl,
         roomIconsUrl,
       ]),
     );
@@ -67,7 +71,15 @@ export function CanvasStage({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawGame(ctx, state, imagesRef.current, stats, imagesRef.current.get(roomIconsUrl));
+    drawGame(
+      ctx,
+      state,
+      imagesRef.current,
+      stats,
+      imagesRef.current.get(roomIconsUrl),
+      imagesRef.current.get(headerLogoUrl),
+      imagesRef.current.get(menuMarkUrl),
+    );
   };
 
   const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {

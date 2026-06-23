@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
-import deadBreakfastLogoUrl from "./assets/dead-breakfast-logo.png";
-import roomIconsUrl from "./assets/room-icons-monochrome.png";
+import upgradeIconsUrl from "./assets/upgrade-icons-monochrome.png";
 import { CanvasStage } from "./CanvasStage";
 import {
   addGuestToRoster,
@@ -21,14 +20,14 @@ import type { CanvasStats, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
 const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
-  bioreactorSpeed: 1,
-  extraRooms: 0,
-  oceanLine: 4,
-  scrapChowStation: 4,
-  alienCleanRoom: 2,
-  agentTerminal: 3,
-  patienceBoost: 2,
-  vipBell: 3,
+  bioreactorSpeed: 0,
+  extraRooms: 1,
+  scrapChowStation: 2,
+  alienCleanRoom: 3,
+  agentTerminal: 4,
+  oceanLine: 2,
+  patienceBoost: 1,
+  vipBell: 4,
 };
 
 export default function App() {
@@ -130,24 +129,6 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <div className="filigree-corners" aria-hidden="true">
-        <span className="filigree-corner corner-top-left" />
-        <span className="filigree-corner corner-top-right" />
-        <span className="filigree-corner corner-bottom-left" />
-        <span className="filigree-corner corner-bottom-right" />
-      </div>
-
-      <header className="brand-row">
-        <h1>
-          <img
-            src={deadBreakfastLogoUrl}
-            alt="Dead and Breakfast"
-            width="760"
-            height="212"
-          />
-        </h1>
-      </header>
-
       <section className="game-column">
         <CanvasStage
           state={game}
@@ -203,10 +184,10 @@ export default function App() {
                 >
                   <span className="upgrade-sprite" aria-hidden="true">
                     <img
-                      src={roomIconsUrl}
+                      src={upgradeIconsUrl}
                       alt=""
                       style={{
-                        transform: `translate(${-spriteIndex * 32}px, -16px)`,
+                        transform: `translateX(${-spriteIndex * 32}px)`,
                       }}
                     />
                   </span>
