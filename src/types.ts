@@ -100,6 +100,10 @@ export interface GameState {
   log: string[];
   agentRushUntil: number;
   alienCalibrationUntil: number;
+  labMeat: number;
+  labMeatMax: number;
+  labMeatClickPulseUntil: number;
+  labMeatShortageUntil: number;
 }
 
 export interface GameSaveV1 {

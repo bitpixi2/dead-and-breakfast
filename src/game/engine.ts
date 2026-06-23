@@ -20,6 +20,12 @@ import {
 import { hitTestCanvas, OVERLAY_BUTTON_RECT, rectContains } from "./layout";
 
 const MAX_LOG_LINES = 6;
+const LAB_MEAT_START = 10;
+const LAB_MEAT_MAX = 18;
+const LAB_MEAT_CLICK_GAIN = 2;
+const LAB_MEAT_DECAY_PER_SECOND = 0.25;
+const LAB_MEAT_FLASH_SECONDS = 2.4;
+const LAB_MEAT_CLICK_PULSE_SECONDS = 0.35;
 
 export function createGameState(
   roster: NormieGuest[] = FALLBACK_GUESTS,
@@ -53,6 +59,10 @@ export function createGameState(
     ],
     agentRushUntil: 0,
     alienCalibrationUntil: 0,
+    labMeat: LAB_MEAT_START,
+    labMeatMax: LAB_MEAT_MAX,
+    labMeatClickPulseUntil: 0,
+    labMeatShortageUntil: 0,
   };
 }
 
@@ -100,6 +110,10 @@ export function startNextDay(state: GameState): GameState {
     streak: 0,
     agentRushUntil: 0,
     alienCalibrationUntil: 0,
+    labMeat: LAB_MEAT_START,
+    labMeatMax: LAB_MEAT_MAX,
+    labMeatClickPulseUntil: 0,
+    labMeatShortageUntil: 0,
     log: [`Day ${day}: doors open. Click a guest, then a station.`],
   };
 }
@@ -143,6 +157,7 @@ export function updateGame(state: GameState, deltaMs: number): GameState {
   let next = cloneState(state);
   const dt = deltaMs / 1000;
   next.dayTime += dt;
+  next = drainLabMeat(next, dt);
 
   if (next.dayTime < next.dayDuration && next.spawnIndex < next.dayRoster.length) {
     next.spawnTimer -= dt;
@@ -273,6 +288,10 @@ export function handleCanvasClick(
     };
   }
 
+  if (hit.kind === "labClicker") {
+    return clickLabMeat(state);
+  }
+
   if (hit.kind === "station" && state.selectedGuestId) {
     return startService(state, state.selectedGuestId, hit.stationId);
   }
@@ -293,7 +312,7 @@ function startService(
   const activeCount = state.services.filter(
     (service) => service.stationId === stationId,
   ).length;
-  const capacity = getStationCapacity(stationId, state.upgrades);
+  const capacity = getEffectiveStationCapacity(stationId, state);
   if (activeCount >= capacity) {
     return {
       ...state,
@@ -328,6 +347,67 @@ function startService(
       `${guest.guest.name} sent to ${stationId}${correct ? "" : " (risky)"}.`,
     ),
   };
+}
+
+function drainLabMeat(state: GameState, dt: number): GameState {
+  if (state.labMeat <= 0) {
+    return { ...state, labMeat: 0 };
+  }
+
+  const labMeat = Math.max(0, state.labMeat - dt * LAB_MEAT_DECAY_PER_SECOND);
+  if (labMeat > 0) {
+    return { ...state, labMeat };
+  }
+
+  return {
+    ...state,
+    labMeat: 0,
+    labMeatShortageUntil: state.dayTime + LAB_MEAT_FLASH_SECONDS,
+    log: pushLog(
+      state.log,
+      "OUT OF HUMAN LAB-GROWN MEAT. Human Suite closed; Cat chow space lost.",
+    ),
+  };
+}
+
+export function clickLabMeat(state: GameState): GameState {
+  if (state.mode !== "playing") {
+    return state;
+  }
+
+  const wasOut = state.labMeat <= 0;
+  const labMeat = Math.min(
+    state.labMeatMax,
+    Math.ceil(state.labMeat) + LAB_MEAT_CLICK_GAIN,
+  );
+  return {
+    ...state,
+    labMeat,
+    labMeatClickPulseUntil: state.dayTime + LAB_MEAT_CLICK_PULSE_SECONDS,
+    log: wasOut
+      ? pushLog(state.log, "Lab-grown meat restored. Human and Cat rooms reopened.")
+      : state.log,
+  };
+}
+
+export function getEffectiveStationCapacity(
+  stationId: StationId,
+  state: GameState,
+): number {
+  const baseCapacity = getStationCapacity(stationId, state.upgrades);
+  if (state.labMeat > 0) {
+    return baseCapacity;
+  }
+
+  if (stationId === "suite") {
+    return 0;
+  }
+
+  if (stationId === "fishery") {
+    return Math.max(0, baseCapacity - 1);
+  }
+
+  return baseCapacity;
 }
 
 function applyServiceComplete(
@@ -464,6 +544,13 @@ export function renderGameToText(state: GameState): string {
     effects: {
       agentRushActive: state.agentRushUntil > state.dayTime,
       alienCalibrationActive: state.alienCalibrationUntil > state.dayTime,
+    },
+    labMeat: {
+      amount: Number(state.labMeat.toFixed(1)),
+      displayAmount: Math.ceil(state.labMeat),
+      max: state.labMeatMax,
+      shortageActive: state.labMeat <= 0,
+      shortageFlashActive: state.labMeatShortageUntil > state.dayTime,
     },
     log: state.log.slice(0, 3),
   });

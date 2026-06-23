@@ -2,15 +2,13 @@ import type { CanvasStats, GameState, NormieGuest, StationId } from "../types";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  LAB_CLICKER_RECT,
   OVERLAY_BUTTON_RECT,
   queueRectForIndex,
   STATION_RECTS,
 } from "./layout";
-import {
-  getGuestRule,
-  getStationCapacity,
-  STATIONS,
-} from "./rules";
+import { getEffectiveStationCapacity } from "./engine";
+import { getGuestRule, STATIONS } from "./rules";
 
 type ImageMap = Map<string, HTMLImageElement>;
 
@@ -27,6 +25,7 @@ export function drawGame(
   drawQueue(ctx, state, images);
   drawStations(ctx, state, images, roomIcons);
   drawFooter(ctx, state);
+  drawLabMeatFlash(ctx, state);
 
   if (state.mode === "menu") {
     drawOverlay(ctx, "Dead and Breakfast", "Start day");
@@ -158,7 +157,7 @@ function drawStations(
     const active = state.services.filter(
       (service) => service.stationId === station.id,
     );
-    const capacity = getStationCapacity(station.id, state.upgrades);
+    const capacity = getEffectiveStationCapacity(station.id, state);
 
     const isPreferred = preferredStationId === station.id;
     roundedRect(ctx, rect.x, rect.y, rect.w, rect.h, 10, isPreferred ? "#eef0ef" : "#f8f9f7");
@@ -206,7 +205,7 @@ function drawStations(
     });
   }
 
-  drawEffects(ctx, state);
+  drawLabMeatClicker(ctx, state);
 }
 
 function drawRoomIcon(
@@ -247,28 +246,74 @@ function drawRoomIcon(
   ctx.restore();
 }
 
-function drawEffects(ctx: CanvasRenderingContext2D, state: GameState): void {
-  const active: string[] = [];
-  if (state.alienCalibrationUntil > state.dayTime) {
-    active.push("Alien calibration");
-  }
-  if (state.agentRushUntil > state.dayTime) {
-    active.push("Agent rush");
+function drawLabMeatClicker(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+): void {
+  const rect = LAB_CLICKER_RECT;
+  const isOut = state.labMeat <= 0;
+  const pulse = state.labMeatClickPulseUntil > state.dayTime;
+  const accent = "#8f1d1d";
+  const amount = Math.ceil(state.labMeat);
+  const ratio = Math.max(0, Math.min(1, state.labMeat / state.labMeatMax));
+
+  ctx.fillStyle = pulse ? "#eef0ef" : "#f8f9f7";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = isOut ? accent : "#48494b";
+  ctx.lineWidth = isOut ? 4 : 3;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+
+  ctx.fillStyle = isOut ? accent : "#252628";
+  ctx.font = "900 15px system-ui, sans-serif";
+  ctx.fillText("Lab-Grown Meat", rect.x + 14, rect.y + 25);
+
+  ctx.fillStyle = "#696b6c";
+  ctx.font = "800 11px system-ui, sans-serif";
+  ctx.fillText(`${amount}/${state.labMeatMax} cuts`, rect.x + 154, rect.y + 25);
+
+  ctx.fillStyle = "#d7dad9";
+  ctx.fillRect(rect.x + 14, rect.y + 39, rect.w - 28, 14);
+  ctx.fillStyle = isOut ? accent : "#48494b";
+  ctx.fillRect(rect.x + 14, rect.y + 39, (rect.w - 28) * ratio, 14);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x + 14, rect.y + 39, rect.w - 28, 14);
+
+  if (isOut) {
+    ctx.fillStyle = accent;
+    ctx.font = "900 11px system-ui, sans-serif";
+    ctx.fillText("OUT OF HUMAN LAB-GROWN MEAT", rect.x + 14, rect.y + 71);
+    ctx.fillStyle = "#252628";
+    ctx.font = "800 11px system-ui, sans-serif";
+    ctx.fillText("Human Suite 0 · Cat Chow -1", rect.x + 14, rect.y + 88);
+  } else {
+    ctx.fillStyle = "#696b6c";
+    ctx.font = "700 12px system-ui, sans-serif";
+    ctx.fillText("Keep supply above zero.", rect.x + 14, rect.y + 76);
   }
 
-  ctx.fillStyle = "#252628";
-  ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("Active Bonuses", 830, 304);
-  ctx.font = "700 13px system-ui, sans-serif";
-  if (active.length === 0) {
-    ctx.fillStyle = "#696b6c";
-    ctx.fillText("Serve Aliens and Agents well.", 830, 330);
-  } else {
-    active.forEach((label, index) => {
-      ctx.fillStyle = index === 0 ? "#252628" : "#48494b";
-      ctx.fillText(label, 830, 330 + index * 22);
-    });
+  ctx.fillStyle = isOut ? accent : "#252628";
+  ctx.fillRect(rect.x + 14, rect.y + 96, rect.w - 28, 20);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 12px system-ui, sans-serif";
+  ctx.fillText("CLICK VAT +2", rect.x + 78, rect.y + 111);
+}
+
+function drawLabMeatFlash(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+): void {
+  if (state.labMeatShortageUntil <= state.dayTime) {
+    return;
   }
+
+  const remaining = state.labMeatShortageUntil - state.dayTime;
+  const alpha = 0.09 + Math.sin(state.dayTime * 22) * 0.04;
+  ctx.fillStyle = `rgba(143, 29, 29, ${Math.max(0.04, alpha * Math.min(1, remaining))})`;
+  ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
+  ctx.fillStyle = "rgba(143, 29, 29, 0.84)";
+  ctx.fillRect(0, 70, CANVAS_WIDTH, 5);
+  ctx.fillRect(0, CANVAS_HEIGHT - 8, CANVAS_WIDTH, 5);
 }
 
 function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {

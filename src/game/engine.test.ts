@@ -4,6 +4,7 @@ import { createDefaultSave } from "../save";
 import {
   advanceGame,
   createGameState,
+  getEffectiveStationCapacity,
   handleCanvasClick,
   renderGameToText,
   startNextDay,
@@ -50,5 +51,47 @@ describe("game engine", () => {
     expect(text.queue.some((guest: { patience: number }) => guest.patience <= 0))
       .toBe(false);
     expect(withExpiredGuest.missed).toBeGreaterThan(0);
+  });
+
+  it("keeps lab-grown meat above zero with the clicker", () => {
+    const state = {
+      ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      dayTime: 12,
+      labMeat: 8,
+    };
+    const next = handleCanvasClick(state, 920, 400);
+    const text = JSON.parse(renderGameToText(next));
+
+    expect(next.labMeat).toBe(10);
+    expect(next.labMeatClickPulseUntil).toBeGreaterThan(next.dayTime);
+    expect(text.labMeat.displayAmount).toBe(10);
+  });
+
+  it("alerts and penalizes Human and Cat rooms when lab meat hits zero", () => {
+    const state = {
+      ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      labMeat: 0.05,
+    };
+    const out = advanceGame(state, 1000);
+    const text = JSON.parse(renderGameToText(out));
+
+    expect(out.labMeat).toBe(0);
+    expect(out.labMeatShortageUntil).toBeGreaterThan(out.dayTime);
+    expect(text.labMeat.shortageActive).toBe(true);
+    expect(getEffectiveStationCapacity("suite", out)).toBe(0);
+    expect(getEffectiveStationCapacity("fishery", out)).toBe(0);
+  });
+
+  it("blocks Human Safe Suite service during lab meat outage", () => {
+    const playing = advanceGame(
+      startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      100,
+    );
+    const out = { ...playing, labMeat: 0 };
+    const selected = handleCanvasClick(out, 60, 150);
+    const attempted = handleCanvasClick(selected, 310, 140);
+
+    expect(attempted.services).toHaveLength(0);
+    expect(attempted.log[0]).toBe("That station is full.");
   });
 });
