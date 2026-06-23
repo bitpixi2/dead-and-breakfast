@@ -143,7 +143,7 @@ export default function App() {
             src={deadBreakfastLogoUrl}
             alt="Dead and Breakfast"
             width="760"
-            height="252"
+            height="212"
           />
         </h1>
       </header>

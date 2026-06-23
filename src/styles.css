@@ -42,6 +42,7 @@ button:disabled {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
+  align-content: start;
   gap: 18px;
   min-height: 100vh;
   padding: 18px;
@@ -52,7 +53,7 @@ button:disabled {
 
 .filigree-corners {
   position: absolute;
-  inset: 178px 0 0;
+  inset: 118px 0 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -336,7 +337,7 @@ h2 {
   }
 
   .filigree-corners {
-    inset: 122px 0 0;
+    inset: 94px 0 0;
   }
 
   .brand-row {
