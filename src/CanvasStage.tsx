@@ -5,7 +5,6 @@ import { drawGame } from "./game/render";
 import headerLogoDarkUrl from "./assets/dead-breakfast-header-logo-dark.png";
 import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
 import houseSpritesUrl from "./assets/house-upgrades-monochrome.png";
-import ledgerLogoUrl from "./assets/dead-breakfast-platter-logomark.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
 
 interface CanvasStageProps {
@@ -31,7 +30,6 @@ export function CanvasStage({
         headerLogoDarkUrl,
         headerLogoUrl,
         houseSpritesUrl,
-        ledgerLogoUrl,
         roomIconsUrl,
       ]),
     );
@@ -84,7 +82,6 @@ export function CanvasStage({
       imagesRef.current.get(headerLogoUrl),
       imagesRef.current.get(headerLogoDarkUrl),
       imagesRef.current.get(houseSpritesUrl),
-      imagesRef.current.get(ledgerLogoUrl),
     );
   };
 

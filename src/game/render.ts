@@ -22,14 +22,13 @@ export function drawGame(
   headerLogo?: HTMLImageElement,
   overlayLogo?: HTMLImageElement,
   houseSprites?: HTMLImageElement,
-  ledgerLogo?: HTMLImageElement,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
   drawHeader(ctx, state, headerLogo);
   drawQueue(ctx, state, images, houseSprites);
   drawStations(ctx, state, images, roomIcons);
-  drawFooter(ctx, state, ledgerLogo);
+  drawFooter(ctx, state);
   drawLabMeatFlash(ctx, state);
 
   if (state.paused) {
@@ -438,65 +437,31 @@ function drawLabMeatFlash(
   ctx.fillRect(0, CANVAS_HEIGHT - 8, CANVAS_WIDTH, 5);
 }
 
-function drawFooter(
-  ctx: CanvasRenderingContext2D,
-  state: GameState,
-  ledgerLogo?: HTMLImageElement,
-): void {
+function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillStyle = "rgba(248, 249, 247, 0.9)";
   ctx.fillRect(300, 464, 760, 118);
   ctx.strokeStyle = "rgba(72, 73, 75, 0.18)";
   ctx.lineWidth = 2;
   ctx.strokeRect(300, 464, 760, 118);
 
-  drawLedgerLogo(ctx, ledgerLogo, 318, 493, 62);
+  drawOpenBookSprite(ctx, 324, 493, 52);
 
   ctx.fillStyle = "#252628";
   ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("D&B Ledger", 402, 492);
+  ctx.fillText("D&B Ledger", 392, 492);
   ctx.font = "600 12px system-ui, sans-serif";
   state.log.slice(0, 6).forEach((line, index) => {
     const column = index < 3 ? 0 : 1;
     const row = index % 3;
-    const x = column === 0 ? 402 : 708;
+    const x = column === 0 ? 392 : 700;
     const y = 518 + row * 18;
     ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
-    drawClippedText(ctx, line, x, y, column === 0 ? 276 : 322);
+    drawClippedText(ctx, line, x, y, column === 0 ? 282 : 330);
   });
 
   ctx.fillStyle = "#252628";
   ctx.font = "700 12px system-ui, sans-serif";
   ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
-}
-
-function drawLedgerLogo(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
-  x: number,
-  y: number,
-  size: number,
-): void {
-  ctx.save();
-  ctx.imageSmoothingEnabled = false;
-  if (image?.complete && image.naturalWidth > 0) {
-    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
-    const sourceX = (image.naturalWidth - sourceSize) / 2;
-    const sourceY = (image.naturalHeight - sourceSize) / 2;
-    ctx.drawImage(
-      image,
-      sourceX,
-      sourceY,
-      sourceSize,
-      sourceSize,
-      x,
-      y,
-      size,
-      size,
-    );
-  } else {
-    drawOpenBookSprite(ctx, x + 5, y + 5, size - 10);
-  }
-  ctx.restore();
 }
 
 function drawOpenBookSprite(
