@@ -15,15 +15,15 @@ export const QUEUE_RECT: Rect = { x: 34, y: 200, w: 222, h: 68 };
 export const QUEUE_GAP = 74;
 
 export const STATION_RECTS: Record<StationId, Rect> = {
-  suite: { x: 300, y: 120, w: 238, h: 124 },
-  bioreactor: { x: 562, y: 120, w: 238, h: 124 },
-  cleanRoom: { x: 824, y: 120, w: 238, h: 124 },
-  frontDesk: { x: 300, y: 298, w: 238, h: 124 },
-  fishery: { x: 562, y: 298, w: 238, h: 124 },
+  suite: { x: 300, y: 112, w: 250, h: 150 },
+  bioreactor: { x: 570, y: 112, w: 250, h: 150 },
+  cleanRoom: { x: 840, y: 112, w: 250, h: 150 },
+  frontDesk: { x: 300, y: 298, w: 250, h: 150 },
+  fishery: { x: 570, y: 298, w: 250, h: 150 },
 };
 
 export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
-export const LAB_CLICKER_RECT: Rect = { x: 824, y: 298, w: 238, h: 124 };
+export const LAB_CLICKER_RECT: Rect = { x: 840, y: 298, w: 250, h: 150 };
 export const PAUSE_BUTTON_RECT: Rect = { x: 986, y: 18, w: 84, h: 34 };
 
 export type HitTarget =

@@ -64,7 +64,7 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
   ctx.fillRect(0, 68, CANVAS_WIDTH, 4);
 
   ctx.fillStyle = "rgba(72, 73, 75, 0.08)";
-  ctx.fillRect(282, 96, 800, 354);
+  ctx.fillRect(282, 96, 812, 364);
   ctx.fillStyle = "rgba(72, 73, 75, 0.12)";
   ctx.fillRect(28, 96, 246, 484);
 }
@@ -293,7 +293,7 @@ function drawStations(
       ctx.font = "800 13px system-ui, sans-serif";
     }
     ctx.fillText(station.label, rect.x + 14, rect.y + 24);
-    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 92, rect.y + 38, 76);
+    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 102, rect.y + 46, 88);
     ctx.fillStyle = "#696b6c";
     ctx.font = "600 11px system-ui, sans-serif";
     ctx.fillText(`${active.length}/${capacity} busy`, rect.x + rect.w - 74, rect.y + 24);
@@ -301,20 +301,20 @@ function drawStations(
     if (active.length === 0) {
       ctx.fillStyle = "#696b6c";
       ctx.font = "600 11px system-ui, sans-serif";
-      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 122, 13);
+      wrapText(ctx, station.description, rect.x + 14, rect.y + 50, rect.w - 132, 14);
     }
 
     active.slice(0, 2).forEach((service, index) => {
-      const y = rect.y + 42 + index * 31;
-      drawGuestImage(ctx, service.guest, images, rect.x + 14, y - 9, 28);
+      const y = rect.y + 50 + index * 36;
+      drawGuestImage(ctx, service.guest, images, rect.x + 14, y - 11, 32);
       ctx.fillStyle = "#252628";
       ctx.font = "800 12px system-ui, sans-serif";
-      drawClippedText(ctx, `${service.type} #${service.guest.tokenId}`, rect.x + 50, y + 2, 90);
+      drawClippedText(ctx, `${service.type} #${service.guest.tokenId}`, rect.x + 56, y + 2, 100);
       drawBar(
         ctx,
-        rect.x + 50,
+        rect.x + 56,
         y + 10,
-        88,
+        98,
         9,
         1 - service.remaining / service.total,
         service.correct ? station.color : "#111214",
@@ -382,42 +382,42 @@ function drawLabMeatClicker(
 
   ctx.fillStyle = isOut ? accent : "#252628";
   ctx.font = "900 13px system-ui, sans-serif";
-  ctx.fillText("Lab-Grown Human Meat", rect.x + 14, rect.y + 25);
+  ctx.fillText("Lab-Grown Human Meat", rect.x + 14, rect.y + 27);
 
   ctx.fillStyle = "#696b6c";
   ctx.font = "800 11px system-ui, sans-serif";
-  ctx.fillText(`${amount}/${state.labMeatMax} cuts`, rect.x + 14, rect.y + 40);
+  ctx.fillText(`${amount}/${state.labMeatMax} cuts`, rect.x + 14, rect.y + 44);
 
   ctx.fillStyle = "#d7dad9";
-  ctx.fillRect(rect.x + 82, rect.y + 31, rect.w - 96, 14);
+  ctx.fillRect(rect.x + 82, rect.y + 35, rect.w - 96, 14);
   ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#48494b";
-  ctx.fillRect(rect.x + 82, rect.y + 31, (rect.w - 96) * ratio, 14);
+  ctx.fillRect(rect.x + 82, rect.y + 35, (rect.w - 96) * ratio, 14);
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 2;
-  ctx.strokeRect(rect.x + 82, rect.y + 31, rect.w - 96, 14);
+  ctx.strokeRect(rect.x + 82, rect.y + 35, rect.w - 96, 14);
 
   if (isOut) {
     ctx.fillStyle = accent;
     ctx.font = "900 11px system-ui, sans-serif";
-    ctx.fillText("OUT OF HUMAN LAB-GROWN MEAT", rect.x + 14, rect.y + 71);
+    ctx.fillText("OUT OF HUMAN LAB-GROWN MEAT", rect.x + 14, rect.y + 78);
     ctx.fillStyle = "#252628";
     ctx.font = "800 11px system-ui, sans-serif";
-    ctx.fillText("Human Suite 0 · Cat Feed -1", rect.x + 14, rect.y + 88);
+    ctx.fillText("Human Suite 0 · Cat Feed -1", rect.x + 14, rect.y + 96);
   } else {
     ctx.fillStyle = "#696b6c";
     ctx.font = "700 12px system-ui, sans-serif";
     ctx.fillText(
       ratio <= 0.28 ? "Low supply. Click fast." : "Keep supply above zero.",
       rect.x + 14,
-      rect.y + 76,
+      rect.y + 84,
     );
   }
 
   ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#252628";
-  ctx.fillRect(rect.x + 14, rect.y + 96, rect.w - 28, 20);
+  ctx.fillRect(rect.x + 14, rect.y + 116, rect.w - 28, 22);
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 12px system-ui, sans-serif";
-  ctx.fillText("CLICK +2", rect.x + 92, rect.y + 111);
+  drawCenteredText(ctx, "CLICK +2", rect.x + rect.w / 2, rect.y + 132);
 }
 
 function drawLabMeatFlash(
