@@ -20,7 +20,11 @@ export function CanvasStage({
 }: CanvasStageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const stateRef = useRef(state);
+  const statsRef = useRef(stats);
   const imagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const ledgerLineRef = useRef<string | null>(null);
+  const ledgerLineStartedAtRef = useRef(0);
   const visibleImageUrls = useMemo(() => {
     return Array.from(
       new Set([
@@ -41,15 +45,31 @@ export function CanvasStage({
       const image = new Image();
       image.crossOrigin = "anonymous";
       image.decoding = "async";
-      image.onload = () => draw();
-      image.onerror = () => draw();
+      image.onload = () => draw(performance.now());
+      image.onerror = () => draw(performance.now());
       image.src = url;
       imagesRef.current.set(url, image);
     }
 
-    draw();
+    draw(performance.now());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleImageUrls, state, stats]);
+
+  useEffect(() => {
+    stateRef.current = state;
+    statsRef.current = stats;
+  }, [state, stats]);
+
+  useEffect(() => {
+    let frame = 0;
+    const loop = (time: number) => {
+      draw(time);
+      frame = requestAnimationFrame(loop);
+    };
+
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -68,20 +88,28 @@ export function CanvasStage({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const draw = () => {
+  const draw = (timeMs: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const currentState = stateRef.current;
+    const latestLedgerLine = currentState.log[0] ?? "";
+    if (ledgerLineRef.current !== latestLedgerLine) {
+      ledgerLineRef.current = latestLedgerLine;
+      ledgerLineStartedAtRef.current = timeMs;
+    }
     drawGame(
       ctx,
-      state,
+      currentState,
       imagesRef.current,
-      stats,
+      statsRef.current,
       imagesRef.current.get(roomIconsUrl),
       imagesRef.current.get(headerLogoUrl),
       imagesRef.current.get(headerLogoDarkUrl),
       imagesRef.current.get(houseSpritesUrl),
+      timeMs / 1000,
+      Math.max(0, (timeMs - ledgerLineStartedAtRef.current) / 1000),
     );
   };
 

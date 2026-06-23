@@ -23,13 +23,15 @@ export function drawGame(
   headerLogo?: HTMLImageElement,
   overlayLogo?: HTMLImageElement,
   houseSprites?: HTMLImageElement,
+  renderTime = 0,
+  ledgerLineAge = 999,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
   drawHeader(ctx, state, headerLogo);
   drawQueue(ctx, state, images, houseSprites);
   drawStations(ctx, state, images, roomIcons);
-  drawFooter(ctx, state);
+  drawFooter(ctx, state, renderTime, ledgerLineAge);
   drawLabMeatFlash(ctx, state);
 
   if (state.paused) {
@@ -442,31 +444,126 @@ function drawLabMeatFlash(
   ctx.fillRect(0, CANVAS_HEIGHT - 8, CANVAS_WIDTH, 5);
 }
 
-function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
-  ctx.fillStyle = "rgba(248, 249, 247, 0.9)";
-  ctx.fillRect(300, 464, 760, 118);
-  ctx.strokeStyle = "rgba(72, 73, 75, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(300, 464, 760, 118);
-
-  drawOpenBookSprite(ctx, 324, 493, 52);
-
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  renderTime: number,
+  ledgerLineAge: number,
+): void {
+  const rect = { x: 300, y: 464, w: 760, h: 118 };
   ctx.fillStyle = "#252628";
-  ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("D&B Ledger", 392, 492);
-  ctx.font = "600 12px system-ui, sans-serif";
-  state.log.slice(0, 6).forEach((line, index) => {
-    const column = index < 3 ? 0 : 1;
-    const row = index % 3;
-    const x = column === 0 ? 392 : 700;
-    const y = 518 + row * 18;
-    ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
-    drawClippedText(ctx, line, x, y, column === 0 ? 282 : 330);
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.fillStyle = "rgba(248, 249, 247, 0.08)";
+  ctx.fillRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
+  ctx.strokeStyle = "rgba(248, 249, 247, 0.68)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = "rgba(248, 249, 247, 0.18)";
+  ctx.strokeRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
+
+  drawLedgerScanlines(ctx, rect.x + 10, rect.y + 10, rect.w - 20, rect.h - 20, renderTime);
+  drawOpenBookSprite(ctx, 322, 493, 48);
+
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 12px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("NIGHT AUDIT TERMINAL", 392, 488);
+  ctx.fillStyle = "rgba(248, 249, 247, 0.62)";
+  ctx.font = "700 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("LIVE LEDGER FEED", 566, 488);
+
+  const visibleLog = state.log.slice(0, 4).reverse();
+  visibleLog.forEach((line, index) => {
+    const isNewest = index === visibleLog.length - 1;
+    const severity = getLedgerSeverity(line);
+    const typedLine = isNewest ? getTypedLedgerLine(line, ledgerLineAge) : line;
+    const y = 512 + index * 17;
+
+    drawLedgerBadge(ctx, severity, 392, y - 11);
+    ctx.fillStyle = isNewest ? severity.color : "rgba(248, 249, 247, 0.66)";
+    ctx.font = `${isNewest ? "800" : "700"} 12px ui-monospace, SFMono-Regular, Menlo, monospace`;
+    drawClippedText(ctx, typedLine.toUpperCase(), 452, y, 560);
+
+    if (isNewest && Math.floor(renderTime * 2) % 2 === 0) {
+      const cursorX = Math.min(
+        1018,
+        452 + ctx.measureText(typedLine.toUpperCase()).width + 5,
+      );
+      ctx.fillStyle = severity.color;
+      ctx.fillRect(cursorX, y - 11, 7, 13);
+    }
   });
 
   ctx.fillStyle = "#252628";
   ctx.font = "700 12px system-ui, sans-serif";
   ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
+}
+
+function drawLedgerScanlines(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  renderTime: number,
+): void {
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = "#f8f9f7";
+  const offset = Math.floor(renderTime * 10) % 8;
+  for (let lineY = y + offset; lineY < y + h; lineY += 8) {
+    ctx.fillRect(x, lineY, w, 1);
+  }
+  ctx.restore();
+}
+
+function getTypedLedgerLine(line: string, lineAge: number): string {
+  const typedCharacters = Math.min(line.length, Math.floor(lineAge * 28));
+  return line.slice(0, typedCharacters);
+}
+
+function getLedgerSeverity(line: string): { label: string; color: string } {
+  const normalized = line.toLowerCase();
+  if (
+    normalized.includes("out of") ||
+    normalized.includes("missed") ||
+    normalized.includes("risky") ||
+    normalized.includes("full")
+  ) {
+    return { label: "WARN", color: "#d58a8a" };
+  }
+  if (
+    normalized.includes("closed") ||
+    normalized.includes("served") ||
+    normalized.includes("payment") ||
+    normalized.includes("upgraded")
+  ) {
+    return { label: "CASH", color: "#f8f9f7" };
+  }
+  if (
+    normalized.includes("arrived") ||
+    normalized.includes("joined") ||
+    normalized.includes("selected") ||
+    normalized.includes("sent")
+  ) {
+    return { label: "OPS", color: "#d7dad9" };
+  }
+  return { label: "INFO", color: "#e3e5e4" };
+}
+
+function drawLedgerBadge(
+  ctx: CanvasRenderingContext2D,
+  severity: { label: string; color: string },
+  x: number,
+  y: number,
+): void {
+  ctx.fillStyle = "rgba(248, 249, 247, 0.08)";
+  ctx.fillRect(x, y, 48, 14);
+  ctx.strokeStyle = severity.color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, 48, 14);
+  ctx.fillStyle = severity.color;
+  ctx.font = "900 9px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, severity.label, x + 24, y + 10);
 }
 
 function drawOpenBookSprite(
