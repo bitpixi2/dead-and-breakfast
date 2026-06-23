@@ -3,6 +3,7 @@ import { STATIONS } from "./rules";
 
 export const CANVAS_WIDTH = 1100;
 export const CANVAS_HEIGHT = 680;
+export const STATION_GUTTER = 10;
 
 export interface Rect {
   x: number;
@@ -18,12 +19,12 @@ export const STATION_RECTS: Record<StationId, Rect> = {
   suite: { x: 300, y: 112, w: 250, h: 150 },
   bioreactor: { x: 560, y: 112, w: 250, h: 150 },
   cleanRoom: { x: 820, y: 112, w: 250, h: 150 },
-  frontDesk: { x: 300, y: 282, w: 250, h: 150 },
-  fishery: { x: 560, y: 282, w: 250, h: 150 },
+  frontDesk: { x: 300, y: 272, w: 250, h: 150 },
+  fishery: { x: 560, y: 272, w: 250, h: 150 },
 };
 
 export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
-export const LAB_CLICKER_RECT: Rect = { x: 820, y: 282, w: 250, h: 150 };
+export const LAB_CLICKER_RECT: Rect = { x: 820, y: 272, w: 250, h: 150 };
 export const PAUSE_BUTTON_RECT: Rect = { x: 986, y: 18, w: 84, h: 34 };
 
 export type HitTarget =

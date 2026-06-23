@@ -6,6 +6,7 @@ import {
   OVERLAY_BUTTON_RECT,
   PAUSE_BUTTON_RECT,
   queueRectForIndex,
+  STATION_GUTTER,
   STATION_RECTS,
 } from "./layout";
 import { canStartNextDayFromDayEnd, getEffectiveStationCapacity } from "./engine";
@@ -63,8 +64,12 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
   ctx.fillStyle = "#252628";
   ctx.fillRect(0, 68, CANVAS_WIDTH, 4);
 
+  const stationPanelX = 300 - STATION_GUTTER;
+  const stationPanelY = 112 - STATION_GUTTER;
+  const stationPanelW = 250 * 3 + STATION_GUTTER * 4;
+  const stationPanelH = 150 * 2 + STATION_GUTTER * 3;
   ctx.fillStyle = "rgba(72, 73, 75, 0.08)";
-  ctx.fillRect(282, 96, 812, 364);
+  ctx.fillRect(stationPanelX, stationPanelY, stationPanelW, stationPanelH);
   ctx.fillStyle = "rgba(72, 73, 75, 0.12)";
   ctx.fillRect(28, 96, 246, 484);
 }
