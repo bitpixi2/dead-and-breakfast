@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import deadBreakfastLogoUrl from "./assets/dead-breakfast-logo.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
 import { CanvasStage } from "./CanvasStage";
 import {
@@ -129,6 +130,17 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      <header className="brand-row">
+        <h1>
+          <img
+            src={deadBreakfastLogoUrl}
+            alt="Dead and Breakfast"
+            width="760"
+            height="252"
+          />
+        </h1>
+      </header>
+
       <section className="game-column">
         <CanvasStage
           state={game}

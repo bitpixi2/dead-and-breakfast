@@ -39,6 +39,7 @@ button:disabled {
 }
 
 .app-shell {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 18px;
@@ -47,6 +48,49 @@ button:disabled {
   background:
     linear-gradient(90deg, rgba(72, 73, 75, 0.08), transparent 38%),
     linear-gradient(180deg, #f8f9f7, #e3e5e4 46%, #d7dad9);
+}
+
+.app-shell::before {
+  position: fixed;
+  inset: 4px auto auto 50%;
+  z-index: 0;
+  width: min(1400px, 108vw);
+  height: min(900px, 96vh);
+  pointer-events: none;
+  background-image: url("./assets/dead-hud-filigree.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: "";
+  image-rendering: pixelated;
+  opacity: 0.2;
+  transform: translateX(-50%);
+}
+
+.brand-row,
+.game-column,
+.side-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  min-height: 96px;
+}
+
+.brand-row h1 {
+  margin: 0;
+  line-height: 0;
+}
+
+.brand-row img {
+  display: block;
+  width: clamp(280px, 36vw, 430px);
+  height: auto;
+  image-rendering: pixelated;
 }
 
 .game-column {
@@ -239,6 +283,14 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .brand-row {
+    min-height: 88px;
+  }
+
+  .brand-row img {
+    width: min(360px, 74vw);
+  }
+
   .side-panel {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -248,6 +300,20 @@ h2 {
 @media (max-width: 680px) {
   .app-shell {
     padding: 10px;
+  }
+
+  .app-shell::before {
+    width: 780px;
+    height: 580px;
+    opacity: 0.14;
+  }
+
+  .brand-row {
+    min-height: 82px;
+  }
+
+  .brand-row img {
+    width: min(315px, 86vw);
   }
 
   .side-panel {
