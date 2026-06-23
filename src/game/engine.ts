@@ -33,6 +33,7 @@ export function createGameState(
 ): GameState {
   return {
     mode: "menu",
+    paused: false,
     day: save.day,
     dayTime: 0,
     dayDuration: 86,
@@ -96,6 +97,7 @@ export function startNextDay(state: GameState): GameState {
   return {
     ...state,
     mode: "playing",
+    paused: false,
     day,
     dayTime: 0,
     dayDuration,
@@ -150,7 +152,7 @@ export function advanceGame(state: GameState, ms: number): GameState {
 }
 
 export function updateGame(state: GameState, deltaMs: number): GameState {
-  if (state.mode !== "playing") {
+  if (state.mode !== "playing" || state.paused) {
     return state;
   }
 
@@ -280,6 +282,14 @@ export function handleCanvasClick(
     state.queue.map((guest) => guest.id),
   );
 
+  if (hit.kind === "pause") {
+    return togglePause(state);
+  }
+
+  if (state.paused) {
+    return state;
+  }
+
   if (hit.kind === "guest") {
     return {
       ...state,
@@ -297,6 +307,19 @@ export function handleCanvasClick(
   }
 
   return state;
+}
+
+export function togglePause(state: GameState): GameState {
+  if (state.mode !== "playing") {
+    return state;
+  }
+
+  return {
+    ...state,
+    paused: !state.paused,
+    selectedGuestId: state.paused ? state.selectedGuestId : null,
+    log: pushLog(state.log, state.paused ? "Service resumed." : "Service paused."),
+  };
 }
 
 function startService(
@@ -515,6 +538,7 @@ export function renderGameToText(state: GameState): string {
     coordinateSystem:
       "Canvas origin is top-left; x increases right and y increases down.",
     mode: state.mode,
+    paused: state.paused,
     day: state.day,
     dayTime: Number(state.dayTime.toFixed(1)),
     resources: {

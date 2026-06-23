@@ -67,6 +67,30 @@ describe("game engine", () => {
     expect(text.labMeat.displayAmount).toBe(10);
   });
 
+  it("pauses play without advancing time, patience, or lab meat", () => {
+    const playing = advanceGame(
+      startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      100,
+    );
+    const paused = handleCanvasClick(playing, 1000, 30);
+    const pauseText = JSON.parse(renderGameToText(paused));
+    const firstGuestPatience = paused.queue[0]?.patience;
+
+    expect(paused.paused).toBe(true);
+    expect(pauseText.paused).toBe(true);
+
+    const advanced = advanceGame(paused, 5000);
+    expect(advanced.dayTime).toBe(paused.dayTime);
+    expect(advanced.labMeat).toBe(paused.labMeat);
+    expect(advanced.queue[0]?.patience).toBe(firstGuestPatience);
+
+    const ignoredGuestClick = handleCanvasClick(advanced, 60, 215);
+    expect(ignoredGuestClick.selectedGuestId).toBeNull();
+
+    const resumed = handleCanvasClick(ignoredGuestClick, 1000, 30);
+    expect(resumed.paused).toBe(false);
+  });
+
   it("alerts and penalizes Human and Cat rooms when lab meat hits zero", () => {
     const state = {
       ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),

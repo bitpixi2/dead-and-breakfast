@@ -24,11 +24,13 @@ export const STATION_RECTS: Record<StationId, Rect> = {
 
 export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
 export const LAB_CLICKER_RECT: Rect = { x: 824, y: 298, w: 238, h: 124 };
+export const PAUSE_BUTTON_RECT: Rect = { x: 986, y: 18, w: 84, h: 34 };
 
 export type HitTarget =
   | { kind: "guest"; guestId: string }
   | { kind: "station"; stationId: StationId }
   | { kind: "labClicker" }
+  | { kind: "pause" }
   | { kind: "none" };
 
 function contains(rect: Rect, x: number, y: number): boolean {
@@ -56,6 +58,10 @@ export function hitTestCanvas(
   y: number,
   queueIds: string[],
 ): HitTarget {
+  if (contains(PAUSE_BUTTON_RECT, x, y)) {
+    return { kind: "pause" };
+  }
+
   for (let index = 0; index < queueIds.length; index += 1) {
     if (contains(queueRectForIndex(index), x, y)) {
       return { kind: "guest", guestId: queueIds[index] };

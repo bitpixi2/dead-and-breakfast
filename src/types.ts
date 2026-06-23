@@ -77,6 +77,7 @@ export interface ServiceJob {
 
 export interface GameState {
   mode: GameMode;
+  paused: boolean;
   day: number;
   dayTime: number;
   dayDuration: number;

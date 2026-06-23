@@ -4,6 +4,7 @@ import {
   CANVAS_WIDTH,
   LAB_CLICKER_RECT,
   OVERLAY_BUTTON_RECT,
+  PAUSE_BUTTON_RECT,
   queueRectForIndex,
   STATION_RECTS,
 } from "./layout";
@@ -26,6 +27,10 @@ export function drawGame(
   drawStations(ctx, state, images, roomIcons);
   drawFooter(ctx, state);
   drawLabMeatFlash(ctx, state);
+
+  if (state.paused) {
+    drawPauseOverlay(ctx);
+  }
 
   if (state.mode === "menu") {
     drawOverlay(ctx, "Dead and Breakfast", "Start day");
@@ -73,7 +78,15 @@ function drawHeader(
 
   ctx.fillStyle = "#e3e5e4";
   const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
-  ctx.fillText(state.mode === "playing" ? `${timeLeft}s` : "Ready", 900, 31);
+  ctx.fillText(
+    state.paused ? "Paused" : state.mode === "playing" ? `${timeLeft}s` : "Ready",
+    900,
+    31,
+  );
+
+  if (state.mode === "playing") {
+    drawPauseButton(ctx, state.paused);
+  }
 
   if (stats) {
     ctx.font = "600 12px system-ui, sans-serif";
@@ -84,6 +97,20 @@ function drawHeader(
       52,
     );
   }
+}
+
+function drawPauseButton(ctx: CanvasRenderingContext2D, paused: boolean): void {
+  const rect = PAUSE_BUTTON_RECT;
+
+  ctx.fillStyle = paused ? "#f8f9f7" : "#252628";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x + 4, rect.y + 4, rect.w - 8, rect.h - 8);
+
+  ctx.fillStyle = paused ? "#252628" : "#f8f9f7";
+  ctx.font = "900 12px system-ui, sans-serif";
+  drawCenteredText(ctx, paused ? "RESUME" : "PAUSE", rect.x + rect.w / 2, rect.y + 22);
 }
 
 function drawQueue(
@@ -467,6 +494,26 @@ function drawOverlay(
     OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
     OVERLAY_BUTTON_RECT.y + 28,
   );
+}
+
+function drawPauseOverlay(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.54)";
+  ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
+
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(376, 250, 348, 124);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(376, 250, 348, 124);
+  ctx.strokeStyle = "#696b6c";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(386, 260, 328, 104);
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, "PAUSED", 550, 306);
+  ctx.font = "800 14px system-ui, sans-serif";
+  drawCenteredText(ctx, "Click RESUME to continue service.", 550, 334);
 }
 
 function drawGuestImage(
