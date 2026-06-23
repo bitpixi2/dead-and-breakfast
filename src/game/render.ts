@@ -247,6 +247,9 @@ function drawStations(
 
     ctx.fillStyle = station.color;
     ctx.font = "800 16px system-ui, sans-serif";
+    if (ctx.measureText(station.label).width > rect.w - 110) {
+      ctx.font = "800 13px system-ui, sans-serif";
+    }
     ctx.fillText(station.label, rect.x + 14, rect.y + 24);
     drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 92, rect.y + 38, 76);
     ctx.fillStyle = "#696b6c";
