@@ -449,9 +449,9 @@ h2 {
   }
 
   .game-canvas {
-    width: min(100dvw, calc(100dvh * 1.6176470588));
+    width: 100dvw;
     max-width: 100dvw;
-    height: auto;
+    height: 100dvh;
     max-height: 100dvh;
   }
 
