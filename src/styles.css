@@ -23,6 +23,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 button,
@@ -119,6 +120,7 @@ h2 {
   background: var(--pixel);
   overflow: hidden;
   box-shadow: 0 16px 42px rgba(37, 38, 40, 0.16);
+  touch-action: none;
 }
 
 .stage-wrap:fullscreen {
@@ -132,6 +134,10 @@ h2 {
   width: 100%;
   height: auto;
   image-rendering: pixelated;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .stage-wrap:fullscreen .game-canvas {
@@ -287,11 +293,76 @@ h2 {
 }
 
 @media (max-width: 680px) {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+
   .app-shell {
-    padding: 10px;
+    display: block;
+    min-height: 100dvh;
+    padding: 6px;
+    overflow-x: hidden;
+    background-attachment: scroll;
+    background-position: center top;
+  }
+
+  .game-column {
+    width: 100%;
+  }
+
+  .stage-wrap {
+    width: calc(100vw - 12px);
+    max-width: none;
+    margin: 0 auto;
+    border-width: 2px;
+    border-radius: 4px;
   }
 
   .side-panel {
     grid-template-columns: 1fr;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 920px) and (orientation: landscape) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: minmax(0, calc(100vw - 246px)) minmax(224px, 1fr);
+    gap: 8px;
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 6px;
+    overflow: hidden;
+    background-attachment: scroll;
+  }
+
+  .stage-wrap {
+    width: 100%;
+    max-width: none;
+    border-width: 2px;
+    border-radius: 4px;
+  }
+
+  .side-panel {
+    display: flex;
+    max-height: calc(100dvh - 12px);
+    overflow-y: auto;
+    gap: 8px;
+    padding-right: 2px;
+  }
+
+  .panel-section {
+    padding: 10px;
+  }
+
+  .upgrade-list {
+    gap: 6px;
+  }
+
+  .upgrade-card {
+    gap: 8px;
+    padding: 7px;
   }
 }
