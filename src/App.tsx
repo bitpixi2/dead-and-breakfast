@@ -130,6 +130,13 @@ export default function App() {
 
   return (
     <main className="app-shell">
+      <div className="filigree-corners" aria-hidden="true">
+        <span className="filigree-corner corner-top-left" />
+        <span className="filigree-corner corner-top-right" />
+        <span className="filigree-corner corner-bottom-left" />
+        <span className="filigree-corner corner-bottom-right" />
+      </div>
+
       <header className="brand-row">
         <h1>
           <img
