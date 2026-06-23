@@ -22,13 +22,14 @@ export function drawGame(
   headerLogo?: HTMLImageElement,
   overlayLogo?: HTMLImageElement,
   houseSprites?: HTMLImageElement,
+  ledgerLogo?: HTMLImageElement,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
   drawHeader(ctx, state, headerLogo);
   drawQueue(ctx, state, images, houseSprites);
   drawStations(ctx, state, images, roomIcons);
-  drawFooter(ctx, state);
+  drawFooter(ctx, state, ledgerLogo);
   drawLabMeatFlash(ctx, state);
 
   if (state.paused) {
@@ -152,7 +153,7 @@ function drawQueue(
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
   ctx.fillText("Guest Check-In", 36, 112);
-  drawHotelEntranceSprite(ctx, houseSprites, state.upgrades.vipBell, 68, 123, 138, 66);
+  drawHotelEntranceSprite(ctx, houseSprites, state.upgrades.vipBell, 109, 122, 72);
 
   if (state.queue.length === 0) {
     ctx.fillStyle = "#696b6c";
@@ -210,8 +211,7 @@ function drawHotelEntranceSprite(
   level: number,
   x: number,
   y: number,
-  w: number,
-  h: number,
+  size: number,
 ): void {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -227,27 +227,27 @@ function drawHotelEntranceSprite(
       houseSprites.naturalHeight,
       x,
       y,
-      w,
-      h,
+      size,
+      size,
     );
     ctx.restore();
     return;
   }
 
   ctx.fillStyle = "#f8f9f7";
-  ctx.fillRect(x, y + 12, w, h - 12);
+  ctx.fillRect(x, y + 12, size, size - 12);
   ctx.fillStyle = "#48494b";
-  ctx.fillRect(x, y + 12, w, 4);
-  ctx.fillRect(x, y + h - 4, w, 4);
-  ctx.fillRect(x + 8, y + 20, 6, h - 24);
-  ctx.fillRect(x + w - 14, y + 20, 6, h - 24);
-  ctx.fillRect(x + 24, y + 4, w - 48, 8);
-  ctx.fillRect(x + 34, y, w - 68, 4);
-  ctx.fillRect(x + 46, y + 25, 34, h - 29);
+  ctx.fillRect(x, y + 12, size, 4);
+  ctx.fillRect(x, y + size - 4, size, 4);
+  ctx.fillRect(x + 8, y + 20, 6, size - 24);
+  ctx.fillRect(x + size - 14, y + 20, 6, size - 24);
+  ctx.fillRect(x + 20, y + 4, size - 40, 8);
+  ctx.fillRect(x + 28, y, size - 56, 4);
+  ctx.fillRect(x + 22, y + 25, 28, size - 29);
   ctx.fillStyle = "#e3e5e4";
-  ctx.fillRect(x + 55, y + 31, 16, h - 35);
+  ctx.fillRect(x + 29, y + 31, 14, size - 35);
   ctx.fillStyle = "#252628";
-  ctx.fillRect(x + 69, y + 44, 4, 4);
+  ctx.fillRect(x + 41, y + 44, 4, 4);
   ctx.restore();
 }
 
@@ -430,31 +430,65 @@ function drawLabMeatFlash(
   ctx.fillRect(0, CANVAS_HEIGHT - 8, CANVAS_WIDTH, 5);
 }
 
-function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
+function drawFooter(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  ledgerLogo?: HTMLImageElement,
+): void {
   ctx.fillStyle = "rgba(248, 249, 247, 0.9)";
   ctx.fillRect(300, 464, 760, 118);
   ctx.strokeStyle = "rgba(72, 73, 75, 0.18)";
   ctx.lineWidth = 2;
   ctx.strokeRect(300, 464, 760, 118);
 
-  drawOpenBookSprite(ctx, 324, 493, 52);
+  drawLedgerLogo(ctx, ledgerLogo, 318, 493, 62);
 
   ctx.fillStyle = "#252628";
   ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("D&B Ledger", 392, 492);
+  ctx.fillText("D&B Ledger", 402, 492);
   ctx.font = "600 12px system-ui, sans-serif";
   state.log.slice(0, 6).forEach((line, index) => {
     const column = index < 3 ? 0 : 1;
     const row = index % 3;
-    const x = column === 0 ? 392 : 700;
+    const x = column === 0 ? 402 : 708;
     const y = 518 + row * 18;
     ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
-    drawClippedText(ctx, line, x, y, column === 0 ? 282 : 330);
+    drawClippedText(ctx, line, x, y, column === 0 ? 276 : 322);
   });
 
   ctx.fillStyle = "#252628";
   ctx.font = "700 12px system-ui, sans-serif";
   ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
+}
+
+function drawLedgerLogo(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement | undefined,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (image?.complete && image.naturalWidth > 0) {
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+    const sourceX = (image.naturalWidth - sourceSize) / 2;
+    const sourceY = (image.naturalHeight - sourceSize) / 2;
+    ctx.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
+      x,
+      y,
+      size,
+      size,
+    );
+  } else {
+    drawOpenBookSprite(ctx, x + 5, y + 5, size - 10);
+  }
+  ctx.restore();
 }
 
 function drawOpenBookSprite(
