@@ -68,24 +68,49 @@ function drawHeader(
   ctx.font = "700 25px ui-monospace, SFMono-Regular, Menlo, monospace";
   ctx.fillText("DEAD AND BREAKFAST", 120, 42);
 
-  ctx.font = "700 15px system-ui, sans-serif";
-  ctx.fillStyle = "#f8f9f7";
-  ctx.fillText(`Day ${state.day}`, 430, 41);
-  ctx.fillText(`${state.coins} coins`, 515, 41);
-  ctx.fillText(`Rep ${state.reputation}`, 625, 41);
-  ctx.fillText(`Score ${state.score}`, 730, 41);
-
-  ctx.fillStyle = "#e3e5e4";
   const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
-  ctx.fillText(
-    state.paused ? "Paused" : state.mode === "playing" ? `${timeLeft}s` : "Ready",
-    865,
-    41,
-  );
+  const status = state.paused
+    ? "Paused"
+    : state.mode === "playing"
+      ? `${timeLeft}s`
+      : "Ready";
+  drawHeaderMetrics(ctx, [
+    { label: "Day", value: String(state.day) },
+    { label: "Time", value: status },
+    {
+      label: "Meat",
+      value: `${Math.ceil(state.labMeat)}/${state.labMeatMax}`,
+      alert: state.labMeat <= state.labMeatMax * 0.28,
+    },
+    { label: "Coins", value: String(state.coins) },
+    { label: "Rep", value: String(state.reputation) },
+    { label: "Score", value: String(state.score) },
+  ]);
 
   if (state.mode === "playing") {
     drawPauseButton(ctx, state.paused);
   }
+}
+
+function drawHeaderMetrics(
+  ctx: CanvasRenderingContext2D,
+  metrics: Array<{ label: string; value: string; alert?: boolean }>,
+): void {
+  let x = 430;
+  const y = 40;
+
+  metrics.forEach((metric) => {
+    ctx.font = "900 12px system-ui, sans-serif";
+    ctx.fillStyle = "#d7dad9";
+    const label = metric.label.toUpperCase();
+    ctx.fillText(label, x, y);
+    x += ctx.measureText(label).width + 5;
+
+    ctx.font = "900 14px system-ui, sans-serif";
+    ctx.fillStyle = metric.alert ? "#d58a8a" : "#f8f9f7";
+    ctx.fillText(metric.value, x, y);
+    x += ctx.measureText(metric.value).width + 18;
+  });
 }
 
 function drawPauseButton(ctx: CanvasRenderingContext2D, paused: boolean): void {

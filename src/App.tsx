@@ -16,7 +16,7 @@ import {
 import { getUpgradeCost, UPGRADE_DEFS } from "./game/rules";
 import { fetchNormieGuest, loadStarterRoster } from "./normiesApi";
 import { loadGameSave, saveFromGameState, writeGameSave } from "./save";
-import type { CanvasStats, GameSaveV1, GameState, UpgradeLevels } from "./types";
+import type { CanvasStats, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
 const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
@@ -32,7 +32,6 @@ const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
 
 export default function App() {
   const initialSave = useRef(loadGameSave());
-  const [save, setSave] = useState<GameSaveV1>(() => initialSave.current);
   const [game, setGame] = useState<GameState>(() =>
     createGameState(undefined, initialSave.current),
   );
@@ -40,7 +39,7 @@ export default function App() {
   const [tokenId, setTokenId] = useState("");
   const [lookupMessage, setLookupMessage] = useState("");
   const gameRef = useRef(game);
-  const saveRef = useRef(save);
+  const saveRef = useRef(initialSave.current);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,10 +57,6 @@ export default function App() {
   useEffect(() => {
     gameRef.current = game;
   }, [game]);
-
-  useEffect(() => {
-    saveRef.current = save;
-  }, [save]);
 
   useEffect(() => {
     window.render_game_to_text = () => renderGameToText(gameRef.current);
@@ -95,7 +90,7 @@ export default function App() {
 
   useEffect(() => {
     const nextSave = saveFromGameState(game, saveRef.current);
-    setSave(nextSave);
+    saveRef.current = nextSave;
     writeGameSave(nextSave);
   }, [
     game.bestScore,
@@ -168,28 +163,6 @@ export default function App() {
               {lookupMessage}
             </p>
           )}
-        </section>
-
-        <section className="panel-section compact-stats">
-          <h2>Local Progress</h2>
-          <dl>
-            <div>
-              <dt>Best</dt>
-              <dd>{save.bestScore}</dd>
-            </div>
-            <div>
-              <dt>Discovered</dt>
-              <dd>{save.discoveredTokenIds.length}</dd>
-            </div>
-            <div>
-              <dt>Served</dt>
-              <dd>{game.served}</dd>
-            </div>
-            <div>
-              <dt>Missed</dt>
-              <dd>{game.missed}</dd>
-            </div>
-          </dl>
         </section>
 
         <section className="panel-section">

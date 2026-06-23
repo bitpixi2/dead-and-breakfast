@@ -185,32 +185,6 @@ h2 {
   margin-top: 8px;
 }
 
-.compact-stats dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.compact-stats div {
-  padding: 10px;
-  border-radius: 3px;
-  background: #e8eae9;
-}
-
-.compact-stats dt {
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.compact-stats dd {
-  margin: 3px 0 0;
-  font-size: 1.16rem;
-  font-weight: 900;
-}
-
 .upgrade-list {
   display: grid;
   gap: 8px;
