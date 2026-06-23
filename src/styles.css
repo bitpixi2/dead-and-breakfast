@@ -76,6 +76,10 @@ button:disabled {
   min-width: 0;
 }
 
+.rotate-phone-hint {
+  display: none;
+}
+
 h2,
 p {
   margin-top: 0;
@@ -309,7 +313,30 @@ h2 {
   }
 
   .game-column {
+    position: relative;
     width: 100%;
+  }
+
+  .rotate-phone-hint {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    padding: 6px 9px;
+    color: #f8f9f7;
+    background: rgba(37, 38, 40, 0.9);
+    border: 2px solid rgba(248, 249, 247, 0.82);
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    transform: translateX(-50%);
+    pointer-events: none;
   }
 
   .stage-wrap {
@@ -327,6 +354,10 @@ h2 {
 }
 
 @media (max-width: 920px) and (orientation: landscape) {
+  .rotate-phone-hint {
+    display: none;
+  }
+
   .app-shell {
     display: grid;
     grid-template-columns: minmax(0, calc(100vw - 246px)) minmax(224px, 1fr);
