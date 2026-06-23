@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef } from "react";
 import type { CanvasStats, GameState } from "./types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./game/layout";
 import { drawGame } from "./game/render";
+import headerLogoDarkUrl from "./assets/dead-breakfast-header-logo-dark.png";
 import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
-import menuMarkUrl from "./assets/dead-breakfast-platter-logomark.png";
+import houseSpritesUrl from "./assets/house-upgrades-monochrome.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
 
 interface CanvasStageProps {
@@ -26,8 +27,9 @@ export function CanvasStage({
         ...state.roster.map((guest) => guest.imageUrl),
         ...state.queue.map((guest) => guest.guest.imageUrl),
         ...state.services.map((service) => service.guest.imageUrl),
+        headerLogoDarkUrl,
         headerLogoUrl,
-        menuMarkUrl,
+        houseSpritesUrl,
         roomIconsUrl,
       ]),
     );
@@ -78,7 +80,8 @@ export function CanvasStage({
       stats,
       imagesRef.current.get(roomIconsUrl),
       imagesRef.current.get(headerLogoUrl),
-      imagesRef.current.get(menuMarkUrl),
+      imagesRef.current.get(headerLogoDarkUrl),
+      imagesRef.current.get(houseSpritesUrl),
     );
   };
 

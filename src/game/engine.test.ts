@@ -3,6 +3,7 @@ import { FALLBACK_GUESTS } from "../data/demoGuests";
 import { createDefaultSave } from "../save";
 import {
   advanceGame,
+  buyUpgrade,
   createGameState,
   getEffectiveStationCapacity,
   handleCanvasClick,
@@ -67,6 +68,22 @@ describe("game engine", () => {
     expect(text.labMeat.displayAmount).toBe(10);
   });
 
+  it("uses the bioreactor regulator upgrade to slow lab meat drain", () => {
+    const base = {
+      ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      labMeat: 10,
+    };
+    const regulated = {
+      ...base,
+      upgrades: { ...base.upgrades, patienceBoost: 3 },
+    };
+
+    const baseAfter = advanceGame(base, 4000);
+    const regulatedAfter = advanceGame(regulated, 4000);
+
+    expect(regulatedAfter.labMeat).toBeGreaterThan(baseAfter.labMeat);
+  });
+
   it("pauses play without advancing time, patience, or lab meat", () => {
     const playing = advanceGame(
       startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
@@ -117,5 +134,17 @@ describe("game engine", () => {
 
     expect(attempted.services).toHaveLength(0);
     expect(attempted.log[0]).toBe("That station is full.");
+  });
+
+  it("can buy the D&B House Upgrade for the check-in house", () => {
+    const state = {
+      ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
+      coins: 50,
+    };
+    const upgraded = buyUpgrade(state, "vipBell");
+
+    expect(upgraded.upgrades.vipBell).toBe(1);
+    expect(upgraded.coins).toBeLessThan(state.coins);
+    expect(upgraded.log[0]).toContain("D&B House Upgrade");
   });
 });

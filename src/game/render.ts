@@ -20,12 +20,13 @@ export function drawGame(
   _stats: CanvasStats | null,
   roomIcons?: HTMLImageElement,
   headerLogo?: HTMLImageElement,
-  menuMark?: HTMLImageElement,
+  overlayLogo?: HTMLImageElement,
+  houseSprites?: HTMLImageElement,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
   drawHeader(ctx, state, headerLogo);
-  drawQueue(ctx, state, images);
+  drawQueue(ctx, state, images, houseSprites);
   drawStations(ctx, state, images, roomIcons);
   drawFooter(ctx, state);
   drawLabMeatFlash(ctx, state);
@@ -35,9 +36,9 @@ export function drawGame(
   }
 
   if (state.mode === "menu") {
-    drawOverlay(ctx, "Dead and Breakfast", "Start day", menuMark);
+    drawOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
-    drawOverlay(ctx, "Day Complete", "Start next day", menuMark);
+    drawOverlay(ctx, "Day Complete", "Start next day", overlayLogo);
   }
 }
 
@@ -146,11 +147,12 @@ function drawQueue(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   images: ImageMap,
+  houseSprites?: HTMLImageElement,
 ): void {
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
   ctx.fillText("Guest Check-In", 36, 112);
-  drawHotelEntranceSprite(ctx, 72, 128, 126, 54);
+  drawHotelEntranceSprite(ctx, houseSprites, state.upgrades.vipBell, 68, 123, 138, 66);
 
   if (state.queue.length === 0) {
     ctx.fillStyle = "#696b6c";
@@ -204,6 +206,8 @@ function drawQueue(
 
 function drawHotelEntranceSprite(
   ctx: CanvasRenderingContext2D,
+  houseSprites: HTMLImageElement | undefined,
+  level: number,
   x: number,
   y: number,
   w: number,
@@ -211,6 +215,25 @@ function drawHotelEntranceSprite(
 ): void {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+
+  if (houseSprites?.complete && houseSprites.naturalWidth > 0) {
+    const tileWidth = houseSprites.naturalWidth / 5;
+    const index = Math.max(0, Math.min(4, Math.floor(level)));
+    ctx.drawImage(
+      houseSprites,
+      index * tileWidth,
+      0,
+      tileWidth,
+      houseSprites.naturalHeight,
+      x,
+      y,
+      w,
+      h,
+    );
+    ctx.restore();
+    return;
+  }
+
   ctx.fillStyle = "#f8f9f7";
   ctx.fillRect(x, y + 12, w, h - 12);
   ctx.fillStyle = "#48494b";
@@ -255,9 +278,6 @@ function drawStations(
       ctx.strokeStyle = "#f8f9f7";
       ctx.lineWidth = 2;
       ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
-      ctx.fillStyle = "#252628";
-      ctx.font = "900 10px system-ui, sans-serif";
-      ctx.fillText("SEND HERE", rect.x + rect.w - 80, rect.y + 42);
     }
 
     ctx.fillStyle = station.color;
@@ -282,12 +302,12 @@ function drawStations(
       drawGuestImage(ctx, service.guest, images, rect.x + 14, y - 9, 28);
       ctx.fillStyle = "#252628";
       ctx.font = "800 12px system-ui, sans-serif";
-      ctx.fillText(`${service.type} #${service.guest.tokenId}`, rect.x + 50, y + 2);
+      drawClippedText(ctx, `${service.type} #${service.guest.tokenId}`, rect.x + 50, y + 2, 90);
       drawBar(
         ctx,
         rect.x + 50,
         y + 10,
-        rect.w - 68,
+        88,
         9,
         1 - service.remaining / service.total,
         service.correct ? station.color : "#111214",
@@ -478,7 +498,7 @@ function drawOverlay(
   ctx: CanvasRenderingContext2D,
   title: string,
   buttonLabel: string,
-  menuMark?: HTMLImageElement,
+  headerLogo?: HTMLImageElement,
 ): void {
   ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
   ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
@@ -486,12 +506,10 @@ function drawOverlay(
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 4;
   ctx.strokeRect(322, 220, 456, 194);
-  drawMenuMark(ctx, menuMark);
-  ctx.fillStyle = "#252628";
-  ctx.font = "900 30px ui-monospace, SFMono-Regular, Menlo, monospace";
-  ctx.fillText(title, 360, 281);
+  drawOverlayTitle(ctx, title, headerLogo);
   ctx.font = "700 16px system-ui, sans-serif";
-  ctx.fillText("Serve each type in its matching room.", 360, 314);
+  ctx.fillStyle = "#252628";
+  drawCenteredText(ctx, "Serve each type in its matching room.", 550, 314);
 
   ctx.fillStyle = "#111214";
   ctx.fillRect(
@@ -525,26 +543,23 @@ function drawOverlay(
   );
 }
 
-function drawMenuMark(
+function drawOverlayTitle(
   ctx: CanvasRenderingContext2D,
-  menuMark?: HTMLImageElement,
+  title: string,
+  headerLogo?: HTMLImageElement,
 ): void {
-  const x = 694;
-  const y = 228;
-  const size = 78;
-
   ctx.save();
   ctx.imageSmoothingEnabled = false;
-  if (menuMark?.complete && menuMark.naturalWidth > 0) {
-    ctx.drawImage(menuMark, x, y, size, size);
+  if (
+    title === "Dead and Breakfast" &&
+    headerLogo?.complete &&
+    headerLogo.naturalWidth > 0
+  ) {
+    ctx.drawImage(headerLogo, 398, 234, 304, 42);
   } else {
-    ctx.strokeStyle = "#252628";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(x + size / 2, y + size * 0.52, size * 0.3, Math.PI, 0);
-    ctx.stroke();
     ctx.fillStyle = "#252628";
-    ctx.fillRect(x + size * 0.18, y + size * 0.56, size * 0.64, 5);
+    ctx.font = "900 30px ui-monospace, SFMono-Regular, Menlo, monospace";
+    drawCenteredText(ctx, title, 550, 281);
   }
   ctx.restore();
 }

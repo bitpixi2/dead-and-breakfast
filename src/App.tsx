@@ -26,9 +26,11 @@ const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
   alienCleanRoom: 3,
   agentTerminal: 4,
   oceanLine: 2,
-  patienceBoost: 1,
-  vipBell: 4,
+  patienceBoost: 5,
+  vipBell: 6,
 };
+
+const UPGRADE_ICON_TILE_SIZE = 50;
 
 export default function App() {
   const initialSave = useRef(loadGameSave());
@@ -187,7 +189,9 @@ export default function App() {
                       src={upgradeIconsUrl}
                       alt=""
                       style={{
-                        transform: `translateX(${-spriteIndex * 32}px)`,
+                        transform: `translateX(${
+                          -spriteIndex * UPGRADE_ICON_TILE_SIZE
+                        }px)`,
                       }}
                     />
                   </span>

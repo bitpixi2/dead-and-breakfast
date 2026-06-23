@@ -377,7 +377,11 @@ function drainLabMeat(state: GameState, dt: number): GameState {
     return { ...state, labMeat: 0 };
   }
 
-  const labMeat = Math.max(0, state.labMeat - dt * LAB_MEAT_DECAY_PER_SECOND);
+  const regulatorMultiplier = Math.max(0.4, 1 - state.upgrades.patienceBoost * 0.18);
+  const labMeat = Math.max(
+    0,
+    state.labMeat - dt * LAB_MEAT_DECAY_PER_SECOND * regulatorMultiplier,
+  );
   if (labMeat > 0) {
     return { ...state, labMeat };
   }

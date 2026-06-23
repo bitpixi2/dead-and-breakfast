@@ -70,7 +70,7 @@ export const STATIONS: StationDef[] = [
   },
   {
     id: "fishery",
-    label: "Cat Nap n' Feed",
+    label: "Cat Nap and Chow",
     shortLabel: "Cat Feed",
     description: "Caught fish blended with scraps so Cats never eye Humans.",
     color: "#48494b",
@@ -86,6 +86,13 @@ export const UPGRADE_DEFS: UpgradeDef[] = [
     baseCost: 24,
   },
   {
+    id: "patienceBoost",
+    label: "Bioreactor Regulator",
+    description: "Slows lab-grown meat drain so fewer clicks keep supply stable.",
+    maxLevel: 3,
+    baseCost: 26,
+  },
+  {
     id: "extraRooms",
     label: "Human Safe Suite",
     description: "Adds more protected Human room space.",
@@ -94,7 +101,7 @@ export const UPGRADE_DEFS: UpgradeDef[] = [
   },
   {
     id: "scrapChowStation",
-    label: "Cat Nap n' Feed",
+    label: "Cat Nap and Chow",
     description: "Adds fish-blended scrap space and speeds Cat service.",
     maxLevel: 2,
     baseCost: 22,
@@ -112,6 +119,13 @@ export const UPGRADE_DEFS: UpgradeDef[] = [
     description: "Adds secure Agent terminal space and speeds Agent service.",
     maxLevel: 2,
     baseCost: 32,
+  },
+  {
+    id: "vipBell",
+    label: "D&B House Upgrade",
+    description: "Improves the Guest Check-In house from booth to mansion.",
+    maxLevel: 4,
+    baseCost: 18,
   },
 ];
 

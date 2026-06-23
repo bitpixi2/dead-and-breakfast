@@ -214,19 +214,19 @@ h2 {
 
 .upgrade-card {
   display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 10px;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 10px;
+  padding: 9px;
   background: #fff;
   text-align: left;
   border-color: rgba(72, 73, 75, 0.2);
 }
 
 .upgrade-sprite {
-  width: 32px;
-  height: 32px;
-  margin-top: 1px;
+  width: 50px;
+  height: 50px;
   overflow: hidden;
   border: 1px solid rgba(72, 73, 75, 0.28);
   background: #e3e5e4;
@@ -235,7 +235,7 @@ h2 {
 
 .upgrade-sprite img {
   display: block;
-  width: 160px;
+  width: 350px;
   max-width: none;
   height: auto;
   image-rendering: pixelated;
