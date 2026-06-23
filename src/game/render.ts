@@ -8,7 +8,7 @@ import {
   queueRectForIndex,
   STATION_RECTS,
 } from "./layout";
-import { getEffectiveStationCapacity } from "./engine";
+import { canStartNextDayFromDayEnd, getEffectiveStationCapacity } from "./engine";
 import { getGuestRule, STATIONS } from "./rules";
 
 type ImageMap = Map<string, HTMLImageElement>;
@@ -39,7 +39,15 @@ export function drawGame(
   if (state.mode === "menu") {
     drawOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
-    drawOverlay(ctx, "Day Complete", "Start next day", overlayLogo);
+    drawOverlay(
+      ctx,
+      "Day Complete",
+      canStartNextDayFromDayEnd(state) ? "Start next day" : null,
+      overlayLogo,
+      canStartNextDayFromDayEnd(state)
+        ? "Upgrades chosen. Start next day."
+        : "Choose your upgrades in the side-menu",
+    );
   }
 }
 
@@ -531,8 +539,9 @@ function drawOpenBookSprite(
 function drawOverlay(
   ctx: CanvasRenderingContext2D,
   title: string,
-  buttonLabel: string,
+  buttonLabel: string | null,
   headerLogo?: HTMLImageElement,
+  subtitle = "Serve each type in its matching room.",
 ): void {
   ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
   ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
@@ -543,7 +552,11 @@ function drawOverlay(
   drawOverlayTitle(ctx, title, headerLogo);
   ctx.font = "700 16px system-ui, sans-serif";
   ctx.fillStyle = "#252628";
-  drawCenteredText(ctx, "Serve each type in its matching room.", 550, 314);
+  drawCenteredText(ctx, subtitle, 550, 314);
+
+  if (!buttonLabel) {
+    return;
+  }
 
   ctx.fillStyle = "#111214";
   ctx.fillRect(

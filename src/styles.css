@@ -146,11 +146,30 @@ h2 {
   min-width: 0;
 }
 
+.side-panel--flash .panel-section {
+  animation: side-menu-upgrade-pulse 820ms steps(2, end) infinite;
+}
+
 .panel-section {
   border: 2px solid rgba(72, 73, 75, 0.18);
   border-radius: 4px;
   background: #f8f9f7;
   padding: 14px;
+}
+
+@keyframes side-menu-upgrade-pulse {
+  0%,
+  100% {
+    border-color: rgba(72, 73, 75, 0.26);
+    background: #f8f9f7;
+    box-shadow: none;
+  }
+
+  50% {
+    border-color: #252628;
+    background: #eef0ef;
+    box-shadow: 0 0 0 4px rgba(37, 38, 40, 0.12);
+  }
 }
 
 .status-card {

@@ -4,6 +4,7 @@ import { createDefaultSave } from "../save";
 import {
   advanceGame,
   buyUpgrade,
+  canStartNextDayFromDayEnd,
   createGameState,
   getEffectiveStationCapacity,
   handleCanvasClick,
@@ -29,16 +30,35 @@ describe("game engine", () => {
     expect(next.mode).toBe("playing");
   });
 
-  it("clicking the day-end overlay button starts the next day", () => {
+  it("waits for a day-end upgrade before starting the next day", () => {
     const state = {
       ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
       mode: "dayEnd" as const,
       day: 1,
+      coins: 50,
+    };
+    const blocked = handleCanvasClick(state, 500, 350);
+    const upgraded = buyUpgrade(blocked, "vipBell");
+    const next = handleCanvasClick(upgraded, 500, 350);
+
+    expect(blocked.mode).toBe("dayEnd");
+    expect(canStartNextDayFromDayEnd(blocked)).toBe(false);
+    expect(upgraded.dayEndUpgradeChoiceMade).toBe(true);
+    expect(next.mode).toBe("playing");
+    expect(next.day).toBe(2);
+  });
+
+  it("allows the next day when no day-end upgrades are affordable", () => {
+    const state = {
+      ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
+      mode: "dayEnd" as const,
+      day: 1,
+      coins: 0,
     };
     const next = handleCanvasClick(state, 500, 350);
 
+    expect(canStartNextDayFromDayEnd(state)).toBe(true);
     expect(next.mode).toBe("playing");
-    expect(next.day).toBe(2);
   });
 
   it("removes guests after they lose patience", () => {

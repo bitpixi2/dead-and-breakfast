@@ -53,6 +53,7 @@ export function createGameState(
     streak: 0,
     served: 0,
     missed: 0,
+    dayEndUpgradeChoiceMade: false,
     upgrades: { ...save.upgrades },
     log: [
       "Dead and Breakfast is open.",
@@ -109,6 +110,7 @@ export function startNextDay(state: GameState): GameState {
     selectedGuestId: null,
     served: 0,
     missed: 0,
+    dayEndUpgradeChoiceMade: false,
     streak: 0,
     agentRushUntil: 0,
     alienCalibrationUntil: 0,
@@ -196,6 +198,7 @@ export function updateGame(state: GameState, deltaMs: number): GameState {
     next.services.length === 0
   ) {
     next.mode = "dayEnd";
+    next.dayEndUpgradeChoiceMade = false;
     next.bestScore = Math.max(next.bestScore, next.score);
     next.log = pushLog(next.log, `Day ${next.day} closed. Buy upgrades.`);
   }
@@ -269,7 +272,10 @@ export function handleCanvasClick(
   }
 
   if (state.mode === "dayEnd") {
-    return rectContains(OVERLAY_BUTTON_RECT, x, y) ? startNextDay(state) : state;
+    return rectContains(OVERLAY_BUTTON_RECT, x, y) &&
+      canStartNextDayFromDayEnd(state)
+      ? startNextDay(state)
+      : state;
   }
 
   if (state.mode !== "playing") {
@@ -513,12 +519,25 @@ export function buyUpgrade(
   return {
     ...state,
     coins: state.coins - cost,
+    dayEndUpgradeChoiceMade:
+      state.mode === "dayEnd" ? true : state.dayEndUpgradeChoiceMade,
     upgrades: {
       ...state.upgrades,
       [upgradeId]: currentLevel + 1,
     },
     log: pushLog(state.log, `${def.label} upgraded.`),
   };
+}
+
+export function hasAffordableUpgrade(state: GameState): boolean {
+  return UPGRADE_DEFS.some((def) => {
+    const level = state.upgrades[def.id];
+    return level < def.maxLevel && state.coins >= getUpgradeCost(def, level);
+  });
+}
+
+export function canStartNextDayFromDayEnd(state: GameState): boolean {
+  return state.dayEndUpgradeChoiceMade || !hasAffordableUpgrade(state);
 }
 
 function cloneState(state: GameState): GameState {
@@ -552,6 +571,9 @@ export function renderGameToText(state: GameState): string {
       bestScore: state.bestScore,
       streak: state.streak,
     },
+    dayEndUpgradeChoiceMade: state.dayEndUpgradeChoiceMade,
+    canStartNextDay:
+      state.mode === "dayEnd" ? canStartNextDayFromDayEnd(state) : undefined,
     selectedGuestId: state.selectedGuestId,
     queue: state.queue.map((guest) => ({
       id: guest.id,

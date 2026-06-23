@@ -97,6 +97,7 @@ export interface GameState {
   streak: number;
   served: number;
   missed: number;
+  dayEndUpgradeChoiceMade: boolean;
   upgrades: UpgradeLevels;
   log: string[];
   agentRushUntil: number;

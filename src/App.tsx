@@ -6,6 +6,7 @@ import {
   addGuestToRoster,
   advanceGame,
   buyUpgrade,
+  canStartNextDayFromDayEnd,
   createGameState,
   handleCanvasClick,
   inviteGuestNow,
@@ -42,6 +43,8 @@ export default function App() {
   const [lookupMessage, setLookupMessage] = useState("");
   const gameRef = useRef(game);
   const saveRef = useRef(initialSave.current);
+  const awaitingDayEndUpgrade =
+    game.mode === "dayEnd" && !canStartNextDayFromDayEnd(game);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +144,9 @@ export default function App() {
         />
       </section>
 
-      <aside className="side-panel">
+      <aside
+        className={`side-panel${awaitingDayEndUpgrade ? " side-panel--flash" : ""}`}
+      >
         <section className="panel-section">
           <h2>Invite Normie</h2>
           <form
