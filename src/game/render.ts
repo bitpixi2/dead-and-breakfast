@@ -134,7 +134,7 @@ function drawQueue(
 ): void {
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
-  ctx.fillText("Guest Queue", 36, 112);
+  ctx.fillText("Guest Check-In", 36, 112);
   drawHotelEntranceSprite(ctx, 72, 128, 126, 54);
 
   if (state.queue.length === 0) {
@@ -205,16 +205,11 @@ function drawHotelEntranceSprite(
   ctx.fillRect(x + w - 14, y + 20, 6, h - 24);
   ctx.fillRect(x + 24, y + 4, w - 48, 8);
   ctx.fillRect(x + 34, y, w - 68, 4);
-  ctx.fillRect(x + 48, y + 25, 30, h - 29);
-  ctx.fillRect(x + 82, y + 25, 30, h - 29);
+  ctx.fillRect(x + 46, y + 25, 34, h - 29);
   ctx.fillStyle = "#e3e5e4";
   ctx.fillRect(x + 55, y + 31, 16, h - 35);
-  ctx.fillRect(x + 89, y + 31, 16, h - 35);
   ctx.fillStyle = "#252628";
-  ctx.fillRect(x + 59, y + 44, 4, 4);
-  ctx.fillRect(x + 98, y + 44, 4, 4);
-  ctx.font = "900 10px ui-monospace, SFMono-Regular, Menlo, monospace";
-  ctx.fillText("INN", x + 54, y + 15);
+  ctx.fillRect(x + 69, y + 44, 4, 4);
   ctx.restore();
 }
 
@@ -362,7 +357,7 @@ function drawLabMeatClicker(
     ctx.fillText("OUT OF HUMAN LAB-GROWN MEAT", rect.x + 14, rect.y + 71);
     ctx.fillStyle = "#252628";
     ctx.font = "800 11px system-ui, sans-serif";
-    ctx.fillText("Human Suite 0 · Cat Chow -1", rect.x + 14, rect.y + 88);
+    ctx.fillText("Human Suite 0 · Cat Feed -1", rect.x + 14, rect.y + 88);
   } else {
     ctx.fillStyle = "#696b6c";
     ctx.font = "700 12px system-ui, sans-serif";
@@ -408,7 +403,7 @@ function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
 
   ctx.fillStyle = "#252628";
   ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("Inn Ledger", 392, 492);
+  ctx.fillText("D&B Ledger", 392, 492);
   ctx.font = "600 12px system-ui, sans-serif";
   state.log.slice(0, 6).forEach((line, index) => {
     const column = index < 3 ? 0 : 1;
