@@ -17,12 +17,12 @@ export function drawGame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   images: ImageMap,
-  stats: CanvasStats | null,
+  _stats: CanvasStats | null,
   roomIcons?: HTMLImageElement,
 ): void {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(ctx);
-  drawHeader(ctx, state, stats);
+  drawHeader(ctx, state);
   drawQueue(ctx, state, images);
   drawStations(ctx, state, images, roomIcons);
   drawFooter(ctx, state);
@@ -63,39 +63,28 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
 function drawHeader(
   ctx: CanvasRenderingContext2D,
   state: GameState,
-  stats: CanvasStats | null,
 ): void {
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "700 25px ui-monospace, SFMono-Regular, Menlo, monospace";
   ctx.fillText("DEAD AND BREAKFAST", 120, 42);
 
-  ctx.font = "700 16px system-ui, sans-serif";
+  ctx.font = "700 15px system-ui, sans-serif";
   ctx.fillStyle = "#f8f9f7";
-  ctx.fillText(`Day ${state.day}`, 494, 31);
-  ctx.fillText(`${state.coins} coins`, 574, 31);
-  ctx.fillText(`Rep ${state.reputation}`, 680, 31);
-  ctx.fillText(`Score ${state.score}`, 774, 31);
+  ctx.fillText(`Day ${state.day}`, 430, 41);
+  ctx.fillText(`${state.coins} coins`, 515, 41);
+  ctx.fillText(`Rep ${state.reputation}`, 625, 41);
+  ctx.fillText(`Score ${state.score}`, 730, 41);
 
   ctx.fillStyle = "#e3e5e4";
   const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
   ctx.fillText(
     state.paused ? "Paused" : state.mode === "playing" ? `${timeLeft}s` : "Ready",
-    900,
-    31,
+    865,
+    41,
   );
 
   if (state.mode === "playing") {
     drawPauseButton(ctx, state.paused);
-  }
-
-  if (stats) {
-    ctx.font = "600 12px system-ui, sans-serif";
-    ctx.fillStyle = "#d7dad9";
-    ctx.fillText(
-      `Live Canvas: ${stats.totalZombies} Zombies / ${stats.totalTransforms} transforms`,
-      494,
-      52,
-    );
   }
 }
 
