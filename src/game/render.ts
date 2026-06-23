@@ -83,8 +83,8 @@ function drawHeader(
       alert: state.labMeat <= state.labMeatMax * 0.28,
     },
     { label: "Coins", value: String(state.coins) },
-    { label: "Rep", value: String(state.reputation) },
-    { label: "Score", value: String(state.score) },
+    { label: "Served", value: String(state.served) },
+    { label: "Missed", value: String(state.missed) },
   ]);
 
   if (state.mode === "playing") {
