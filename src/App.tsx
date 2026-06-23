@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  BedDouble,
-  ClipboardCheck,
-  Fish,
-  FlaskConical,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { Search } from "lucide-react";
+import roomIconsUrl from "./assets/room-icons-monochrome.png";
 import { CanvasStage } from "./CanvasStage";
 import {
   addGuestToRoster,
@@ -25,15 +19,15 @@ import { loadGameSave, saveFromGameState, writeGameSave } from "./save";
 import type { CanvasStats, GameSaveV1, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
-const iconByUpgrade: Record<keyof UpgradeLevels, typeof FlaskConical> = {
-  bioreactorSpeed: FlaskConical,
-  extraRooms: BedDouble,
-  oceanLine: Fish,
-  scrapChowStation: Fish,
-  alienCleanRoom: Sparkles,
-  agentTerminal: ClipboardCheck,
-  patienceBoost: Sparkles,
-  vipBell: Sparkles,
+const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
+  bioreactorSpeed: 1,
+  extraRooms: 0,
+  oceanLine: 4,
+  scrapChowStation: 4,
+  alienCleanRoom: 2,
+  agentTerminal: 3,
+  patienceBoost: 2,
+  vipBell: 3,
 };
 
 export default function App() {
@@ -204,7 +198,7 @@ export default function App() {
             {UPGRADE_DEFS.map((upgrade) => {
               const level = game.upgrades[upgrade.id];
               const cost = getUpgradeCost(upgrade, level);
-              const Icon = iconByUpgrade[upgrade.id];
+              const spriteIndex = spriteIndexByUpgrade[upgrade.id];
               const maxed = level >= upgrade.maxLevel;
               return (
                 <button
@@ -215,7 +209,15 @@ export default function App() {
                     setGame((current) => buyUpgrade(current, upgrade.id))
                   }
                 >
-                  <Icon size={20} aria-hidden="true" />
+                  <span className="upgrade-sprite" aria-hidden="true">
+                    <img
+                      src={roomIconsUrl}
+                      alt=""
+                      style={{
+                        transform: `translate(${-spriteIndex * 32}px, -16px)`,
+                      }}
+                    />
+                  </span>
                   <span>
                     <strong>{upgrade.label}</strong>
                     <small>

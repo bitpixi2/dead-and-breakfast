@@ -433,22 +433,40 @@ function drawOverlay(
   ctx.strokeRect(322, 220, 456, 194);
   ctx.fillStyle = "#252628";
   ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
-  ctx.fillText(title, 366, 282);
+  drawCenteredText(ctx, title, 550, 282);
   ctx.font = "700 16px system-ui, sans-serif";
-  ctx.fillText("Serve each type in its matching room.", 386, 314);
+  drawCenteredText(ctx, "Serve each type in its matching room.", 550, 314);
 
-  roundedRect(
-    ctx,
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(
+    OVERLAY_BUTTON_RECT.x - 4,
+    OVERLAY_BUTTON_RECT.y + 4,
+    OVERLAY_BUTTON_RECT.w + 8,
+    OVERLAY_BUTTON_RECT.h,
+  );
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(
     OVERLAY_BUTTON_RECT.x,
     OVERLAY_BUTTON_RECT.y,
     OVERLAY_BUTTON_RECT.w,
     OVERLAY_BUTTON_RECT.h,
-    8,
-    "#252628",
+  );
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    OVERLAY_BUTTON_RECT.x + 6,
+    OVERLAY_BUTTON_RECT.y + 6,
+    OVERLAY_BUTTON_RECT.w - 12,
+    OVERLAY_BUTTON_RECT.h - 12,
   );
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 17px system-ui, sans-serif";
-  ctx.fillText(buttonLabel, OVERLAY_BUTTON_RECT.x + 52, OVERLAY_BUTTON_RECT.y + 28);
+  drawCenteredText(
+    ctx,
+    buttonLabel,
+    OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
+    OVERLAY_BUTTON_RECT.y + 28,
+  );
 }
 
 function drawGuestImage(
@@ -502,6 +520,15 @@ function drawClippedText(
     clipped = `${clipped.slice(0, -4)}...`;
   }
   ctx.fillText(clipped, x, y);
+}
+
+function drawCenteredText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  y: number,
+): void {
+  ctx.fillText(text, centerX - ctx.measureText(text).width / 2, y);
 }
 
 function roundedRect(

@@ -66,7 +66,7 @@ h2 {
 .icon-button,
 .upgrade-card {
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: 4px;
   color: var(--ink);
   transition:
     transform 120ms ease,
@@ -93,7 +93,7 @@ h2 {
   width: 100%;
   max-width: 1320px;
   border: 3px solid var(--pixel);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--pixel);
   overflow: hidden;
   box-shadow: 0 16px 42px rgba(37, 38, 40, 0.16);
@@ -126,7 +126,7 @@ h2 {
 
 .panel-section {
   border: 2px solid rgba(72, 73, 75, 0.18);
-  border-radius: 8px;
+  border-radius: 4px;
   background: rgba(248, 249, 247, 0.9);
   padding: 14px;
 }
@@ -175,7 +175,7 @@ h2 {
   min-width: 0;
   height: 42px;
   border: 2px solid rgba(72, 73, 75, 0.24);
-  border-radius: 8px;
+  border-radius: 3px;
   padding: 0 12px;
   background: #fff;
   color: var(--ink);
@@ -194,7 +194,7 @@ h2 {
 
 .compact-stats div {
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 3px;
   background: #e8eae9;
 }
 
@@ -218,7 +218,7 @@ h2 {
 
 .upgrade-card {
   display: grid;
-  grid-template-columns: 24px 1fr;
+  grid-template-columns: 34px 1fr;
   gap: 10px;
   width: 100%;
   padding: 10px;
@@ -227,9 +227,22 @@ h2 {
   border-color: rgba(72, 73, 75, 0.2);
 }
 
-.upgrade-card svg {
-  margin-top: 2px;
-  color: var(--pixel);
+.upgrade-sprite {
+  width: 32px;
+  height: 32px;
+  margin-top: 1px;
+  overflow: hidden;
+  border: 1px solid rgba(72, 73, 75, 0.28);
+  background: #e3e5e4;
+  image-rendering: pixelated;
+}
+
+.upgrade-sprite img {
+  display: block;
+  width: 160px;
+  max-width: none;
+  height: auto;
+  image-rendering: pixelated;
 }
 
 .upgrade-card strong {
