@@ -50,7 +50,7 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
   ctx.fillRect(0, 68, CANVAS_WIDTH, 4);
 
   ctx.fillStyle = "rgba(72, 73, 75, 0.08)";
-  ctx.fillRect(282, 96, 800, 350);
+  ctx.fillRect(282, 96, 800, 354);
   ctx.fillStyle = "rgba(72, 73, 75, 0.12)";
   ctx.fillRect(28, 96, 246, 484);
 }
@@ -94,11 +94,12 @@ function drawQueue(
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
   ctx.fillText("Guest Queue", 36, 112);
+  drawHotelEntranceSprite(ctx, 72, 128, 126, 54);
 
   if (state.queue.length === 0) {
     ctx.fillStyle = "#696b6c";
     ctx.font = "600 14px system-ui, sans-serif";
-    ctx.fillText("The lobby is quiet.", 48, 162);
+    ctx.fillText("The lobby is quiet.", 48, 220);
   }
 
   state.queue.slice(0, 5).forEach((guest, index) => {
@@ -119,26 +120,61 @@ function drawQueue(
       ctx.fillText("SELECTED", rect.x + rect.w - 70, rect.y + 18);
     }
 
-    drawGuestImage(ctx, guest.guest, images, rect.x + 12, rect.y + 12, 50);
+    drawGuestImage(ctx, guest.guest, images, rect.x + 12, rect.y + 10, 46);
 
     ctx.fillStyle = selected ? "#f8f9f7" : "#252628";
     ctx.font = "800 14px system-ui, sans-serif";
-    ctx.fillText(`${guest.type} #${guest.guest.tokenId}`, rect.x + 72, rect.y + 24);
+    ctx.fillText(`${guest.type} #${guest.guest.tokenId}`, rect.x + 68, rect.y + 22);
 
     ctx.font = "600 11px system-ui, sans-serif";
     ctx.fillStyle = selected ? "#d7dad9" : "#696b6c";
-    ctx.fillText(rule.serviceName, rect.x + 72, rect.y + 42);
+    ctx.fillText(rule.serviceName, rect.x + 68, rect.y + 40);
 
     drawBar(
       ctx,
-      rect.x + 72,
-      rect.y + 52,
+      rect.x + 68,
+      rect.y + 50,
       130,
       9,
       guest.patience / guest.maxPatience,
-      selected ? "#f8f9f7" : rule.color,
+      guest.patience / guest.maxPatience <= 0.28
+        ? "#8f1d1d"
+        : selected
+          ? "#f8f9f7"
+          : rule.color,
     );
   });
+}
+
+function drawHotelEntranceSprite(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(x, y + 12, w, h - 12);
+  ctx.fillStyle = "#48494b";
+  ctx.fillRect(x, y + 12, w, 4);
+  ctx.fillRect(x, y + h - 4, w, 4);
+  ctx.fillRect(x + 8, y + 20, 6, h - 24);
+  ctx.fillRect(x + w - 14, y + 20, 6, h - 24);
+  ctx.fillRect(x + 24, y + 4, w - 48, 8);
+  ctx.fillRect(x + 34, y, w - 68, 4);
+  ctx.fillRect(x + 48, y + 25, 30, h - 29);
+  ctx.fillRect(x + 82, y + 25, 30, h - 29);
+  ctx.fillStyle = "#e3e5e4";
+  ctx.fillRect(x + 55, y + 31, 16, h - 35);
+  ctx.fillRect(x + 89, y + 31, 16, h - 35);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(x + 59, y + 44, 4, 4);
+  ctx.fillRect(x + 98, y + 44, 4, 4);
+  ctx.font = "900 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("INN", x + 54, y + 15);
+  ctx.restore();
 }
 
 function drawStations(
@@ -176,7 +212,7 @@ function drawStations(
     ctx.fillStyle = station.color;
     ctx.font = "800 16px system-ui, sans-serif";
     ctx.fillText(station.label, rect.x + 14, rect.y + 24);
-    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 88, rect.y + 30, 70);
+    drawRoomIcon(ctx, roomIcons, stationIndex, rect.x + rect.w - 92, rect.y + 38, 76);
     ctx.fillStyle = "#696b6c";
     ctx.font = "600 11px system-ui, sans-serif";
     ctx.fillText(`${active.length}/${capacity} busy`, rect.x + rect.w - 74, rect.y + 24);
@@ -184,7 +220,7 @@ function drawStations(
     if (active.length === 0) {
       ctx.fillStyle = "#696b6c";
       ctx.font = "600 11px system-ui, sans-serif";
-      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 116, 13);
+      wrapText(ctx, station.description, rect.x + 14, rect.y + 48, rect.w - 122, 13);
     }
 
     active.slice(0, 2).forEach((service, index) => {
@@ -264,20 +300,20 @@ function drawLabMeatClicker(
   ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
 
   ctx.fillStyle = isOut ? accent : "#252628";
-  ctx.font = "900 15px system-ui, sans-serif";
-  ctx.fillText("Lab-Grown Meat", rect.x + 14, rect.y + 25);
+  ctx.font = "900 13px system-ui, sans-serif";
+  ctx.fillText("Lab-Grown Human Meat", rect.x + 14, rect.y + 25);
 
   ctx.fillStyle = "#696b6c";
   ctx.font = "800 11px system-ui, sans-serif";
-  ctx.fillText(`${amount}/${state.labMeatMax} cuts`, rect.x + 154, rect.y + 25);
+  ctx.fillText(`${amount}/${state.labMeatMax} cuts`, rect.x + 14, rect.y + 40);
 
   ctx.fillStyle = "#d7dad9";
-  ctx.fillRect(rect.x + 14, rect.y + 39, rect.w - 28, 14);
-  ctx.fillStyle = isOut ? accent : "#48494b";
-  ctx.fillRect(rect.x + 14, rect.y + 39, (rect.w - 28) * ratio, 14);
+  ctx.fillRect(rect.x + 82, rect.y + 31, rect.w - 96, 14);
+  ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#48494b";
+  ctx.fillRect(rect.x + 82, rect.y + 31, (rect.w - 96) * ratio, 14);
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 2;
-  ctx.strokeRect(rect.x + 14, rect.y + 39, rect.w - 28, 14);
+  ctx.strokeRect(rect.x + 82, rect.y + 31, rect.w - 96, 14);
 
   if (isOut) {
     ctx.fillStyle = accent;
@@ -289,14 +325,18 @@ function drawLabMeatClicker(
   } else {
     ctx.fillStyle = "#696b6c";
     ctx.font = "700 12px system-ui, sans-serif";
-    ctx.fillText("Keep supply above zero.", rect.x + 14, rect.y + 76);
+    ctx.fillText(
+      ratio <= 0.28 ? "Low supply. Click fast." : "Keep supply above zero.",
+      rect.x + 14,
+      rect.y + 76,
+    );
   }
 
-  ctx.fillStyle = isOut ? accent : "#252628";
+  ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#252628";
   ctx.fillRect(rect.x + 14, rect.y + 96, rect.w - 28, 20);
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 12px system-ui, sans-serif";
-  ctx.fillText("CLICK VAT +2", rect.x + 78, rect.y + 111);
+  ctx.fillText("CLICK +2", rect.x + 92, rect.y + 111);
 }
 
 function drawLabMeatFlash(
@@ -318,20 +358,24 @@ function drawLabMeatFlash(
 
 function drawFooter(ctx: CanvasRenderingContext2D, state: GameState): void {
   ctx.fillStyle = "rgba(248, 249, 247, 0.9)";
-  ctx.fillRect(300, 470, 760, 146);
+  ctx.fillRect(300, 464, 760, 118);
   ctx.strokeStyle = "rgba(72, 73, 75, 0.18)";
   ctx.lineWidth = 2;
-  ctx.strokeRect(300, 470, 760, 146);
+  ctx.strokeRect(300, 464, 760, 118);
 
-  drawOpenBookSprite(ctx, 324, 494, 52);
+  drawOpenBookSprite(ctx, 324, 493, 52);
 
   ctx.fillStyle = "#252628";
   ctx.font = "800 15px system-ui, sans-serif";
-  ctx.fillText("Inn Ledger", 392, 498);
-  ctx.font = "600 13px system-ui, sans-serif";
-  state.log.slice(0, 5).forEach((line, index) => {
+  ctx.fillText("Inn Ledger", 392, 492);
+  ctx.font = "600 12px system-ui, sans-serif";
+  state.log.slice(0, 6).forEach((line, index) => {
+    const column = index < 3 ? 0 : 1;
+    const row = index % 3;
+    const x = column === 0 ? 392 : 700;
+    const y = 518 + row * 18;
     ctx.fillStyle = index === 0 ? "#252628" : "#696b6c";
-    ctx.fillText(line, 392, 524 + index * 20);
+    drawClippedText(ctx, line, x, y, column === 0 ? 282 : 330);
   });
 
   ctx.fillStyle = "#252628";
@@ -444,6 +488,20 @@ function drawBar(
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = color;
   ctx.fillRect(x, y, Math.max(0, Math.min(1, value)) * w, h);
+}
+
+function drawClippedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+): void {
+  let clipped = text;
+  while (ctx.measureText(clipped).width > maxWidth && clipped.length > 4) {
+    clipped = `${clipped.slice(0, -4)}...`;
+  }
+  ctx.fillText(clipped, x, y);
 }
 
 function roundedRect(

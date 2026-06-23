@@ -11,19 +11,19 @@ export interface Rect {
   h: number;
 }
 
-export const QUEUE_RECT: Rect = { x: 34, y: 130, w: 222, h: 74 };
-export const QUEUE_GAP = 84;
+export const QUEUE_RECT: Rect = { x: 34, y: 200, w: 222, h: 68 };
+export const QUEUE_GAP = 74;
 
 export const STATION_RECTS: Record<StationId, Rect> = {
-  suite: { x: 300, y: 126, w: 220, h: 106 },
-  bioreactor: { x: 556, y: 126, w: 238, h: 106 },
-  cleanRoom: { x: 830, y: 126, w: 230, h: 106 },
-  frontDesk: { x: 300, y: 304, w: 220, h: 106 },
-  fishery: { x: 556, y: 304, w: 238, h: 106 },
+  suite: { x: 300, y: 120, w: 238, h: 124 },
+  bioreactor: { x: 562, y: 120, w: 238, h: 124 },
+  cleanRoom: { x: 824, y: 120, w: 238, h: 124 },
+  frontDesk: { x: 300, y: 298, w: 238, h: 124 },
+  fishery: { x: 562, y: 298, w: 238, h: 124 },
 };
 
 export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
-export const LAB_CLICKER_RECT: Rect = { x: 806, y: 292, w: 236, h: 128 };
+export const LAB_CLICKER_RECT: Rect = { x: 824, y: 298, w: 238, h: 124 };
 
 export type HitTarget =
   | { kind: "guest"; guestId: string }

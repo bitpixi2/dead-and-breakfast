@@ -88,7 +88,7 @@ describe("game engine", () => {
       100,
     );
     const out = { ...playing, labMeat: 0 };
-    const selected = handleCanvasClick(out, 60, 150);
+    const selected = handleCanvasClick(out, 60, 215);
     const attempted = handleCanvasClick(selected, 310, 140);
 
     expect(attempted.services).toHaveLength(0);
