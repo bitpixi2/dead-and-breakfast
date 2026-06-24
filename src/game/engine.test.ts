@@ -6,6 +6,7 @@ import {
   buyUpgrade,
   canStartNextDayFromDayEnd,
   createGameState,
+  getDayDifficulty,
   getEffectiveStationCapacity,
   handleCanvasClick,
   renderGameToText,
@@ -166,5 +167,46 @@ describe("game engine", () => {
     expect(upgraded.upgrades.vipBell).toBe(1);
     expect(upgraded.coins).toBeLessThan(state.coins);
     expect(upgraded.log[0]).toContain("D&B House Upgrade");
+  });
+
+  it("ramps day 3, 4, and 5 into faster harder service days", () => {
+    const day2 = getDayDifficulty(2);
+    const day3 = getDayDifficulty(3);
+    const day4 = getDayDifficulty(4);
+    const day5 = getDayDifficulty(5);
+
+    expect(day3.spawnMultiplier).toBeLessThan(day2.spawnMultiplier);
+    expect(day4.spawnMultiplier).toBeLessThan(day3.spawnMultiplier);
+    expect(day5.spawnMultiplier).toBeLessThan(day4.spawnMultiplier);
+    expect(day3.patienceMultiplier).toBeLessThan(day2.patienceMultiplier);
+    expect(day4.patienceMultiplier).toBeLessThan(day3.patienceMultiplier);
+    expect(day5.patienceMultiplier).toBeLessThan(day4.patienceMultiplier);
+    expect(day5.labDrainMultiplier).toBeGreaterThan(day4.labDrainMultiplier);
+  });
+
+  it("spawns guests with less patience and shorter gaps on harder days", () => {
+    const base = createGameState(FALLBACK_GUESTS, createDefaultSave());
+    const dayOne = advanceGame(startNextDay(base), 100);
+    const dayFive = advanceGame(
+      startNextDay({ ...base, mode: "dayEnd" as const, day: 4 }),
+      100,
+    );
+
+    expect(dayFive.day).toBe(5);
+    expect(dayFive.queue[0].patience).toBeLessThan(dayOne.queue[0].patience);
+    expect(dayFive.spawnTimer).toBeLessThan(dayOne.spawnTimer);
+  });
+
+  it("drains lab-grown meat faster by day 5", () => {
+    const base = {
+      ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      labMeat: 10,
+    };
+    const dayFive = { ...base, day: 5 };
+
+    const baseAfter = advanceGame(base, 4000);
+    const dayFiveAfter = advanceGame(dayFive, 4000);
+
+    expect(dayFiveAfter.labMeat).toBeLessThan(baseAfter.labMeat);
   });
 });

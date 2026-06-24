@@ -332,6 +332,11 @@ h2 {
     border-radius: 4px;
   }
 
+  .stage-wrap--mobile-board .game-canvas {
+    width: 100%;
+    height: auto;
+  }
+
   .side-panel {
     grid-template-columns: 1fr;
     margin-top: 10px;

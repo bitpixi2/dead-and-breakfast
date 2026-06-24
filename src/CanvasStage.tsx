@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CanvasStats, GameState } from "./types";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./game/layout";
-import { drawGame } from "./game/render";
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  MOBILE_CANVAS_HEIGHT,
+  MOBILE_CANVAS_WIDTH,
+  translateMobilePointToCanvas,
+} from "./game/layout";
+import { drawGame, drawMobileGame } from "./game/render";
 import headerLogoDarkUrl from "./assets/dead-breakfast-header-logo-dark.png";
 import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
 import houseSpritesUrl from "./assets/house-upgrades-monochrome.png";
@@ -11,6 +17,11 @@ interface CanvasStageProps {
   state: GameState;
   stats: CanvasStats | null;
   onCanvasClick: (x: number, y: number) => void;
+}
+
+interface ViewportSize {
+  width: number;
+  height: number;
 }
 
 export function CanvasStage({
@@ -25,6 +36,11 @@ export function CanvasStage({
   const imagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const ledgerLineRef = useRef<string | null>(null);
   const ledgerLineStartedAtRef = useRef(0);
+  const touchHandledAtRef = useRef(0);
+  const [viewport, setViewport] = useState<ViewportSize>(() => ({
+    width: typeof window === "undefined" ? CANVAS_WIDTH : window.innerWidth,
+    height: typeof window === "undefined" ? CANVAS_HEIGHT : window.innerHeight,
+  }));
   const visibleImageUrls = useMemo(() => {
     return Array.from(
       new Set([
@@ -54,6 +70,23 @@ export function CanvasStage({
     draw(performance.now());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleImageUrls, state, stats]);
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    window.addEventListener("orientationchange", updateViewport);
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+      window.removeEventListener("orientationchange", updateViewport);
+    };
+  }, []);
 
   useEffect(() => {
     stateRef.current = state;
@@ -99,7 +132,8 @@ export function CanvasStage({
       ledgerLineRef.current = latestLedgerLine;
       ledgerLineStartedAtRef.current = timeMs;
     }
-    drawGame(
+    const draw = isPortraitPhone(viewport) ? drawMobileGame : drawGame;
+    draw(
       ctx,
       currentState,
       imagesRef.current,
@@ -113,25 +147,63 @@ export function CanvasStage({
     );
   };
 
-  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const mapPointerToCanvas = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * CANVAS_WIDTH;
-    const y = ((event.clientY - rect.top) / rect.height) * CANVAS_HEIGHT;
-    onCanvasClick(x, y);
+    const isMobile = isPortraitPhone(viewport);
+    const canvasWidth = isMobile ? MOBILE_CANVAS_WIDTH : CANVAS_WIDTH;
+    const canvasHeight = isMobile ? MOBILE_CANVAS_HEIGHT : CANVAS_HEIGHT;
+    const x = ((clientX - rect.left) / rect.width) * canvasWidth;
+    const y = ((clientY - rect.top) / rect.height) * canvasHeight;
+    return isMobile
+      ? translateMobilePointToCanvas(
+          x,
+          y,
+          stateRef.current.queue.map((guest) => guest.id),
+        )
+      : { x, y };
   };
 
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (performance.now() - touchHandledAtRef.current < 500) return;
+    const point = mapPointerToCanvas(event.clientX, event.clientY);
+    if (!point) return;
+    onCanvasClick(point.x, point.y);
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.pointerType === "mouse") return;
+    event.preventDefault();
+    touchHandledAtRef.current = performance.now();
+    const point = mapPointerToCanvas(event.clientX, event.clientY);
+    if (!point) return;
+    onCanvasClick(point.x, point.y);
+  };
+
+  const isMobile = isPortraitPhone(viewport);
+  const stageClassName = [
+    "stage-wrap",
+    isMobile ? "stage-wrap--mobile-board" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="stage-wrap" ref={wrapRef}>
+    <div className={stageClassName} ref={wrapRef}>
       <canvas
         ref={canvasRef}
         className="game-canvas"
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
+        width={isMobile ? MOBILE_CANVAS_WIDTH : CANVAS_WIDTH}
+        height={isMobile ? MOBILE_CANVAS_HEIGHT : CANVAS_HEIGHT}
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
         aria-label="Dead and Breakfast game canvas"
       />
     </div>
   );
+}
+
+function isPortraitPhone(viewport: ViewportSize): boolean {
+  return viewport.width <= 680 && viewport.height > viewport.width;
 }

@@ -3,11 +3,19 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   LAB_CLICKER_RECT,
+  MOBILE_CANVAS_HEIGHT,
+  MOBILE_CANVAS_WIDTH,
+  MOBILE_LAB_CLICKER_RECT,
+  MOBILE_OVERLAY_BUTTON_RECT,
+  MOBILE_PAUSE_BUTTON_RECT,
+  MOBILE_STATION_RECTS,
   OVERLAY_BUTTON_RECT,
   PAUSE_BUTTON_RECT,
+  mobileQueueRectForIndex,
   queueRectForIndex,
   STATION_GUTTER,
   STATION_RECTS,
+  type Rect,
 } from "./layout";
 import { canStartNextDayFromDayEnd, getEffectiveStationCapacity } from "./engine";
 import { getGuestRule, STATIONS } from "./rules";
@@ -51,6 +59,361 @@ export function drawGame(
         : "Choose your upgrades in the side-menu",
     );
   }
+}
+
+export function drawMobileGame(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+  _stats: CanvasStats | null,
+  roomIcons?: HTMLImageElement,
+  headerLogo?: HTMLImageElement,
+  overlayLogo?: HTMLImageElement,
+  _houseSprites?: HTMLImageElement,
+  renderTime = 0,
+  ledgerLineAge = 999,
+): void {
+  ctx.clearRect(0, 0, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT);
+  drawMobileBackground(ctx);
+  drawMobileHeader(ctx, state, headerLogo);
+  drawMobileQueue(ctx, state, images);
+  drawMobileStations(ctx, state, images, roomIcons);
+  drawMobileLedger(ctx, state, renderTime, ledgerLineAge);
+  drawMobileLabMeatFlash(ctx, state);
+
+  if (state.paused) {
+    drawMobilePauseOverlay(ctx);
+  }
+
+  if (state.mode === "menu") {
+    drawMobileOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
+  } else if (state.mode === "dayEnd") {
+    drawMobileOverlay(
+      ctx,
+      "Day Complete",
+      canStartNextDayFromDayEnd(state) ? "Start next day" : null,
+      overlayLogo,
+      canStartNextDayFromDayEnd(state)
+        ? "Upgrades chosen. Start next day."
+        : "Choose upgrades in the side-menu",
+    );
+  }
+}
+
+function drawMobileBackground(ctx: CanvasRenderingContext2D): void {
+  const grd = ctx.createLinearGradient(0, 0, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT);
+  grd.addColorStop(0, "#f8f9f7");
+  grd.addColorStop(0.5, "#e3e5e4");
+  grd.addColorStop(1, "#d7dad9");
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT);
+  ctx.fillStyle = "#48494b";
+  ctx.fillRect(0, 0, MOBILE_CANVAS_WIDTH, 72);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(0, 70, MOBILE_CANVAS_WIDTH, 3);
+}
+
+function drawMobileHeader(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  headerLogo?: HTMLImageElement,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (headerLogo?.complete && headerLogo.naturalWidth > 0) {
+    ctx.drawImage(headerLogo, 10, 5, 292, 40);
+  } else {
+    ctx.fillStyle = "#f8f9f7";
+    ctx.font = "900 24px ui-monospace, SFMono-Regular, Menlo, monospace";
+    ctx.fillText("DEAD & BREAKFAST", 14, 35);
+  }
+  ctx.restore();
+
+  const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
+  const metrics = [
+    `DAY ${state.day}`,
+    state.mode === "playing" ? `${timeLeft}s` : "READY",
+    `MEAT ${Math.ceil(state.labMeat)}/${state.labMeatMax}`,
+    `COINS ${state.coins}`,
+  ];
+  ctx.font = "900 10px system-ui, sans-serif";
+  metrics.forEach((item, index) => {
+    const x = 14 + (index % 2) * 116;
+    const y = 55 + Math.floor(index / 2) * 14;
+    ctx.fillStyle =
+      item.startsWith("MEAT") && state.labMeat <= state.labMeatMax * 0.28
+        ? "#d58a8a"
+        : "#f8f9f7";
+    ctx.fillText(item, x, y);
+  });
+
+  if (state.mode === "playing") {
+    const rect = MOBILE_PAUSE_BUTTON_RECT;
+    ctx.fillStyle = state.paused ? "#f8f9f7" : "#252628";
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = "#f8f9f7";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(rect.x + 3, rect.y + 3, rect.w - 6, rect.h - 6);
+    ctx.fillStyle = state.paused ? "#252628" : "#f8f9f7";
+    ctx.font = "900 9px system-ui, sans-serif";
+    drawCenteredText(ctx, state.paused ? "GO" : "PAUSE", rect.x + rect.w / 2, rect.y + 20);
+  }
+}
+
+function drawMobileQueue(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+): void {
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 15px system-ui, sans-serif";
+  ctx.fillText("Guest Check-In", 14, 94);
+
+  if (state.queue.length === 0) {
+    ctx.fillStyle = "#696b6c";
+    ctx.font = "800 13px system-ui, sans-serif";
+    ctx.fillText("Lobby quiet.", 204, 94);
+  }
+
+  state.queue.slice(0, 4).forEach((guest, index) => {
+    const rect = mobileQueueRectForIndex(index);
+    const selected = state.selectedGuestId === guest.id;
+    const rule = getGuestRule(guest.type);
+    ctx.fillStyle = selected ? "#252628" : "#f8f9f7";
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = selected ? "#111214" : rule.color;
+    ctx.lineWidth = selected ? 5 : 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (selected) {
+      ctx.strokeStyle = "#f8f9f7";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x + 6, rect.y + 6, rect.w - 12, rect.h - 12);
+    }
+
+    drawGuestImage(ctx, guest.guest, images, rect.x + 8, rect.y + 10, 44);
+    ctx.fillStyle = selected ? "#f8f9f7" : "#252628";
+    ctx.font = "900 12px system-ui, sans-serif";
+    drawClippedText(ctx, `${guest.type} #${guest.guest.tokenId}`, rect.x + 60, rect.y + 25, 102);
+    ctx.fillStyle = selected ? "#d7dad9" : "#696b6c";
+    ctx.font = "800 10px system-ui, sans-serif";
+    drawClippedText(ctx, rule.serviceName, rect.x + 60, rect.y + 42, 102);
+    drawBar(
+      ctx,
+      rect.x + 60,
+      rect.y + 54,
+      96,
+      8,
+      guest.patience / guest.maxPatience,
+      guest.patience / guest.maxPatience <= 0.28
+        ? "#8f1d1d"
+        : selected
+          ? "#f8f9f7"
+          : rule.color,
+    );
+  });
+}
+
+function drawMobileStations(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  images: ImageMap,
+  roomIcons?: HTMLImageElement,
+): void {
+  const selectedGuest = state.queue.find((guest) => guest.id === state.selectedGuestId);
+  const preferredStationId = selectedGuest
+    ? getGuestRule(selectedGuest.type).preferredStation
+    : null;
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 15px system-ui, sans-serif";
+  ctx.fillText("Rooms", 14, 272);
+
+  STATIONS.forEach((station, index) => {
+    const rect = MOBILE_STATION_RECTS[station.id];
+    const active = state.services.filter((service) => service.stationId === station.id);
+    const capacity = getEffectiveStationCapacity(station.id, state);
+    const isPreferred = preferredStationId === station.id;
+
+    ctx.fillStyle = isPreferred ? "#eef0ef" : "#f8f9f7";
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = station.color;
+    ctx.lineWidth = isPreferred ? 5 : 2;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    if (isPreferred) {
+      ctx.strokeStyle = "#f8f9f7";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x + 6, rect.y + 6, rect.w - 12, rect.h - 12);
+    }
+
+    ctx.fillStyle = station.color;
+    ctx.font = "900 11px system-ui, sans-serif";
+    drawClippedText(ctx, station.label, rect.x + 8, rect.y + 17, 118);
+    ctx.fillStyle = "#696b6c";
+    ctx.font = "800 9px system-ui, sans-serif";
+    ctx.fillText(`${active.length}/${capacity}`, rect.x + rect.w - 31, rect.y + 17);
+    drawRoomIcon(ctx, roomIcons, index, rect.x + rect.w - 50, rect.y + 37, 38);
+
+    if (active.length > 0) {
+      active.slice(0, 2).forEach((service, serviceIndex) => {
+        const y = rect.y + 39 + serviceIndex * 28;
+        drawGuestImage(ctx, service.guest, images, rect.x + 8, y - 11, 24);
+        ctx.fillStyle = "#252628";
+        ctx.font = "900 9px system-ui, sans-serif";
+        drawClippedText(ctx, `${service.type} #${service.guest.tokenId}`, rect.x + 38, y, 74);
+        drawBar(
+          ctx,
+          rect.x + 38,
+          y + 7,
+          72,
+          7,
+          1 - service.remaining / service.total,
+          service.correct ? station.color : "#111214",
+        );
+      });
+    } else {
+      ctx.fillStyle = "#696b6c";
+      ctx.font = "700 9px system-ui, sans-serif";
+      wrapText(ctx, station.description, rect.x + 8, rect.y + 40, 108, 11);
+    }
+  });
+
+  drawMobileLabMeatClicker(ctx, state, MOBILE_LAB_CLICKER_RECT);
+}
+
+function drawMobileLabMeatClicker(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  rect: Rect,
+): void {
+  const isOut = state.labMeat <= 0;
+  const pulse = state.labMeatClickPulseUntil > state.dayTime;
+  const ratio = Math.max(0, Math.min(1, state.labMeat / state.labMeatMax));
+  const accent = "#8f1d1d";
+  ctx.fillStyle = pulse ? "#eef0ef" : "#f8f9f7";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = isOut ? accent : "#48494b";
+  ctx.lineWidth = isOut ? 4 : 2;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.fillStyle = isOut ? accent : "#252628";
+  ctx.font = "900 11px system-ui, sans-serif";
+  ctx.fillText("Lab Meat", rect.x + 8, rect.y + 17);
+  ctx.fillStyle = "#696b6c";
+  ctx.font = "800 9px system-ui, sans-serif";
+  ctx.fillText(`${Math.ceil(state.labMeat)}/${state.labMeatMax} cuts`, rect.x + 94, rect.y + 17);
+  ctx.fillStyle = "#d7dad9";
+  ctx.fillRect(rect.x + 8, rect.y + 29, rect.w - 16, 11);
+  ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#48494b";
+  ctx.fillRect(rect.x + 8, rect.y + 29, (rect.w - 16) * ratio, 11);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(rect.x + 8, rect.y + 29, rect.w - 16, 11);
+  ctx.fillStyle = isOut || ratio <= 0.28 ? accent : "#252628";
+  ctx.fillRect(rect.x + 8, rect.y + 78, rect.w - 16, 26);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 12px system-ui, sans-serif";
+  drawCenteredText(ctx, "CLICK +2", rect.x + rect.w / 2, rect.y + 96);
+  ctx.fillStyle = isOut ? accent : "#696b6c";
+  ctx.font = "800 9px system-ui, sans-serif";
+  drawClippedText(
+    ctx,
+    isOut ? "OUT: humans unsafe" : ratio <= 0.28 ? "Low supply" : "Keep stocked",
+    rect.x + 8,
+    rect.y + 61,
+    rect.w - 16,
+  );
+}
+
+function drawMobileLedger(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  renderTime: number,
+  ledgerLineAge: number,
+): void {
+  const rect = { x: 14, y: 654, w: 362, h: 18 };
+  const line = state.log[0] ?? "";
+  const severity = getLedgerSeverity(line);
+  const typedLine = getTypedLedgerLine(line, ledgerLineAge);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.fillStyle = severity.color;
+  ctx.font = "900 9px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawClippedText(ctx, typedLine.toUpperCase(), rect.x + 8, rect.y + 12, rect.w - 16);
+  if (Math.floor(renderTime * 2) % 2 === 0) {
+    ctx.fillRect(rect.x + rect.w - 10, rect.y + 5, 4, 8);
+  }
+}
+
+function drawMobileLabMeatFlash(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+): void {
+  if (state.labMeatShortageUntil <= state.dayTime) return;
+  const alpha = 0.09 + Math.sin(state.dayTime * 22) * 0.04;
+  ctx.fillStyle = `rgba(143, 29, 29, ${Math.max(0.04, alpha)})`;
+  ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
+}
+
+function drawMobileOverlay(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  buttonLabel: string | null,
+  headerLogo?: HTMLImageElement,
+  subtitle = "Serve each type in its matching room.",
+): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.7)";
+  ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(28, 244, 334, 202);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(28, 244, 334, 202);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (
+    title === "Dead and Breakfast" &&
+    headerLogo?.complete &&
+    headerLogo.naturalWidth > 0
+  ) {
+    ctx.drawImage(headerLogo, 52, 267, 286, 39);
+  } else {
+    ctx.fillStyle = "#252628";
+    ctx.font = "900 25px ui-monospace, SFMono-Regular, Menlo, monospace";
+    drawCenteredText(ctx, title, 195, 302);
+  }
+  ctx.restore();
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "800 14px system-ui, sans-serif";
+  drawCenteredText(ctx, subtitle, 195, 340);
+
+  if (!buttonLabel) return;
+  const rect = MOBILE_OVERLAY_BUTTON_RECT;
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(rect.x - 4, rect.y + 4, rect.w + 8, rect.h);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 16px system-ui, sans-serif";
+  drawCenteredText(ctx, buttonLabel, rect.x + rect.w / 2, rect.y + 31);
+}
+
+function drawMobilePauseOverlay(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.54)";
+  ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(76, 284, 238, 100);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(76, 284, 238, 100);
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 28px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, "PAUSED", 195, 329);
+  ctx.font = "800 12px system-ui, sans-serif";
+  drawCenteredText(ctx, "Tap GO to continue.", 195, 354);
 }
 
 function drawBackground(ctx: CanvasRenderingContext2D): void {

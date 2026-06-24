@@ -27,6 +27,14 @@ const LAB_MEAT_DECAY_PER_SECOND = 0.25;
 const LAB_MEAT_FLASH_SECONDS = 2.4;
 const LAB_MEAT_CLICK_PULSE_SECONDS = 0.35;
 
+interface DayDifficulty {
+  spawnMultiplier: number;
+  minSpawnSeconds: number;
+  patienceMultiplier: number;
+  serviceMultiplier: number;
+  labDrainMultiplier: number;
+}
+
 export function createGameState(
   roster: NormieGuest[] = FALLBACK_GUESTS,
   save: GameSaveV1,
@@ -213,7 +221,8 @@ function spawnNextGuest(state: GameState): GameState {
   }
 
   const guest = state.dayRoster[state.spawnIndex];
-  const patience = getPatienceSeconds(guest.type, state.upgrades);
+  const difficulty = getDayDifficulty(state.day);
+  const patience = getScaledPatienceSeconds(guest.type, state.upgrades, state.day);
   const instance: GuestInstance = {
     id: `g${state.nextGuestId}`,
     guest,
@@ -228,7 +237,7 @@ function spawnNextGuest(state: GameState): GameState {
     ...state,
     nextGuestId: state.nextGuestId + 1,
     spawnIndex: state.spawnIndex + 1,
-    spawnTimer: Math.max(3.4, 7.2 - state.day * 0.25 - state.upgrades.agentTerminal * 0.4),
+    spawnTimer: getSpawnDelaySeconds(state.day, state.upgrades.agentTerminal, difficulty),
     queue: [...state.queue, instance],
     log: pushLog(state.log, `${guest.name} arrived as ${guest.type}.`),
   };
@@ -243,7 +252,11 @@ export function inviteGuestNow(
     return withRoster;
   }
 
-  const patience = getPatienceSeconds(guest.type, withRoster.upgrades);
+  const patience = getScaledPatienceSeconds(
+    guest.type,
+    withRoster.upgrades,
+    withRoster.day,
+  );
   const instance: GuestInstance = {
     id: `g${withRoster.nextGuestId}`,
     guest: { ...guest, source: "manual" },
@@ -355,10 +368,7 @@ function startService(
     guest: guest.guest,
     type: guest.type,
     stationId,
-    total: getServiceDurationSeconds(guest.type, stationId, state.upgrades, {
-      agentRushActive: state.agentRushUntil > state.dayTime,
-      alienCalibrationActive: state.alienCalibrationUntil > state.dayTime,
-    }),
+    total: getScaledServiceDurationSeconds(guest.type, stationId, state),
     remaining: 0,
     correct,
     startedAt: state.dayTime,
@@ -386,7 +396,11 @@ function drainLabMeat(state: GameState, dt: number): GameState {
   const regulatorMultiplier = Math.max(0.4, 1 - state.upgrades.patienceBoost * 0.18);
   const labMeat = Math.max(
     0,
-    state.labMeat - dt * LAB_MEAT_DECAY_PER_SECOND * regulatorMultiplier,
+    state.labMeat -
+      dt *
+        LAB_MEAT_DECAY_PER_SECOND *
+        regulatorMultiplier *
+        getDayDifficulty(state.day).labDrainMultiplier,
   );
   if (labMeat > 0) {
     return { ...state, labMeat };
@@ -496,6 +510,87 @@ function hasHumanNearby(state: GameState): boolean {
   return (
     state.queue.some((guest) => guest.type === "Human") ||
     state.services.some((service) => service.type === "Human")
+  );
+}
+
+export function getDayDifficulty(day: number): DayDifficulty {
+  const extraDay = Math.max(0, day - 5);
+
+  if (day <= 2) {
+    return {
+      spawnMultiplier: 1,
+      minSpawnSeconds: 3.4,
+      patienceMultiplier: 1,
+      serviceMultiplier: 1,
+      labDrainMultiplier: 1,
+    };
+  }
+
+  if (day === 3) {
+    return {
+      spawnMultiplier: 0.9,
+      minSpawnSeconds: 3.1,
+      patienceMultiplier: 0.94,
+      serviceMultiplier: 0.95,
+      labDrainMultiplier: 1.12,
+    };
+  }
+
+  if (day === 4) {
+    return {
+      spawnMultiplier: 0.82,
+      minSpawnSeconds: 2.85,
+      patienceMultiplier: 0.88,
+      serviceMultiplier: 0.91,
+      labDrainMultiplier: 1.22,
+    };
+  }
+
+  return {
+    spawnMultiplier: Math.max(0.68, 0.76 - extraDay * 0.03),
+    minSpawnSeconds: Math.max(2.4, 2.65 - extraDay * 0.08),
+    patienceMultiplier: Math.max(0.76, 0.84 - extraDay * 0.02),
+    serviceMultiplier: Math.max(0.84, 0.88 - extraDay * 0.015),
+    labDrainMultiplier: Math.min(1.48, 1.32 + extraDay * 0.04),
+  };
+}
+
+function getSpawnDelaySeconds(
+  day: number,
+  agentTerminalLevel: number,
+  difficulty = getDayDifficulty(day),
+): number {
+  const baseDelay = 7.2 - day * 0.25 - agentTerminalLevel * 0.4;
+  return Number(
+    Math.max(difficulty.minSpawnSeconds, baseDelay * difficulty.spawnMultiplier).toFixed(2),
+  );
+}
+
+function getScaledPatienceSeconds(
+  type: GuestInstance["type"],
+  upgrades: GameState["upgrades"],
+  day: number,
+): number {
+  return Number(
+    Math.max(
+      8,
+      getPatienceSeconds(type, upgrades) * getDayDifficulty(day).patienceMultiplier,
+    ).toFixed(2),
+  );
+}
+
+function getScaledServiceDurationSeconds(
+  type: GuestInstance["type"],
+  stationId: StationId,
+  state: GameState,
+): number {
+  const duration = getServiceDurationSeconds(type, stationId, state.upgrades, {
+    agentRushActive: state.agentRushUntil > state.dayTime,
+    alienCalibrationActive: state.alienCalibrationUntil > state.dayTime,
+  });
+
+  return Number(
+    Math.max(1.9, duration * getDayDifficulty(state.day).serviceMultiplier).toFixed(2),
   );
 }
 
