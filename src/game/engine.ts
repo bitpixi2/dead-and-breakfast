@@ -237,26 +237,55 @@ function spawnNextGuest(state: GameState): GameState {
     return { ...state, spawnTimer: 1.5 };
   }
 
-  const guest = state.dayRoster[state.spawnIndex];
+  if (shouldTakeArrivalLull(state.day, state.spawnIndex)) {
+    return {
+      ...state,
+      spawnTimer: getArrivalLullSeconds(state.day, state.spawnIndex),
+      log: pushLog(state.log, "The lobby goes quiet for a moment."),
+    };
+  }
+
   const difficulty = getDayDifficulty(state.day);
-  const patience = getScaledPatienceSeconds(guest.type, state.upgrades, state.day);
-  const instance: GuestInstance = {
-    id: `g${state.nextGuestId}`,
-    guest,
-    type: guest.type,
-    patience,
-    maxPatience: patience,
-    arrivedAt: state.dayTime,
-    serviceNote: getGuestRule(guest.type).serviceName,
-  };
+  const openSlots = maxQueue - state.queue.length;
+  const remainingRoster = state.dayRoster.length - state.spawnIndex;
+  const batchCount = Math.min(
+    openSlots,
+    remainingRoster,
+    getSpawnBatchSize(state.day, state.spawnIndex),
+  );
+  const arrivals: GuestInstance[] = [];
+
+  for (let offset = 0; offset < batchCount; offset += 1) {
+    const guest = state.dayRoster[state.spawnIndex + offset];
+    const patience = getScaledPatienceSeconds(guest.type, state.upgrades, state.day);
+    arrivals.push({
+      id: `g${state.nextGuestId + offset}`,
+      guest,
+      type: guest.type,
+      patience,
+      maxPatience: patience,
+      arrivedAt: state.dayTime,
+      serviceNote: getGuestRule(guest.type).serviceName,
+    });
+  }
 
   return {
     ...state,
-    nextGuestId: state.nextGuestId + 1,
-    spawnIndex: state.spawnIndex + 1,
-    spawnTimer: getSpawnDelaySeconds(state.day, state.upgrades.agentTerminal, difficulty),
-    queue: [...state.queue, instance],
-    log: pushLog(state.log, `${guest.name} arrived as ${guest.type}.`),
+    nextGuestId: state.nextGuestId + batchCount,
+    spawnIndex: state.spawnIndex + batchCount,
+    spawnTimer: getSpawnDelaySeconds(
+      state.day,
+      state.upgrades.agentTerminal,
+      difficulty,
+      state.spawnIndex + batchCount,
+    ),
+    queue: [...state.queue, ...arrivals],
+    log: pushLog(
+      state.log,
+      batchCount === 1
+        ? `${arrivals[0].guest.name} arrived as ${arrivals[0].type}.`
+        : `${batchCount} guests arrived at once.`,
+    ),
   };
 }
 
@@ -685,11 +714,46 @@ function getSpawnDelaySeconds(
   day: number,
   agentTerminalLevel: number,
   difficulty = getDayDifficulty(day),
+  spawnIndex = 0,
 ): number {
   const baseDelay = 7.2 - day * 0.25 - agentTerminalLevel * 0.4;
+  const jitter =
+    day <= 2 ? 1 : 0.72 + pseudoRandom01(day, spawnIndex, 23) * (0.24 + day * 0.055);
   return Number(
-    Math.max(difficulty.minSpawnSeconds, baseDelay * difficulty.spawnMultiplier).toFixed(2),
+    Math.max(
+      difficulty.minSpawnSeconds,
+      baseDelay * difficulty.spawnMultiplier * jitter,
+    ).toFixed(2),
   );
+}
+
+export function getSpawnBatchSize(day: number, spawnIndex: number): number {
+  if (day <= 2) return 1;
+  const roll = pseudoRandom01(day, spawnIndex, 11);
+  if (day >= 6) {
+    if (roll > 0.78) return 3;
+    if (roll > 0.38) return 2;
+    return 1;
+  }
+  if (day >= 4) {
+    return roll > 0.54 ? 2 : 1;
+  }
+  return roll > 0.72 ? 2 : 1;
+}
+
+function shouldTakeArrivalLull(day: number, spawnIndex: number): boolean {
+  if (day < 3 || spawnIndex === 0) return false;
+  const threshold = day >= 6 ? 0.34 : day >= 4 ? 0.22 : 0.12;
+  return pseudoRandom01(day, spawnIndex, 41) < threshold;
+}
+
+function getArrivalLullSeconds(day: number, spawnIndex: number): number {
+  return Number((1.8 + day * 0.34 + pseudoRandom01(day, spawnIndex, 59) * 3.4).toFixed(2));
+}
+
+function pseudoRandom01(day: number, spawnIndex: number, salt: number): number {
+  const value = Math.sin(day * 129.9721 + spawnIndex * 37.719 + salt * 11.131) * 10000;
+  return value - Math.floor(value);
 }
 
 function getScaledPatienceSeconds(

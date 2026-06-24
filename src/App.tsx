@@ -9,6 +9,7 @@ import {
   canStartNextDayFromDayEnd,
   createGameState,
   handleCanvasClick,
+  hasAffordableUpgrade,
   inviteGuestNow,
   renderGameToText,
   setRoster,
@@ -28,7 +29,6 @@ const spriteIndexByUpgrade: Record<keyof UpgradeLevels, number> = {
   alienCleanRoom: 4,
   agentTerminal: 5,
   oceanLine: 3,
-  vipBell: 6,
 };
 
 const UPGRADE_ICON_TILE_SIZE = 50;
@@ -45,6 +45,8 @@ export default function App() {
   const saveRef = useRef(initialSave.current);
   const awaitingDayEndUpgrade =
     game.mode === "dayEnd" && !canStartNextDayFromDayEnd(game);
+  const dayEndHasAffordableUpgrade =
+    game.mode === "dayEnd" && hasAffordableUpgrade(game);
 
   useEffect(() => {
     let cancelled = false;
@@ -174,12 +176,18 @@ export default function App() {
 
         <section className="panel-section">
           <h2>Upgrades</h2>
+          {dayEndHasAffordableUpgrade && (
+            <p className="form-note" role="status">
+              Choose one affordable upgrade to unlock the next day.
+            </p>
+          )}
           <div className="upgrade-list">
             {UPGRADE_DEFS.map((upgrade) => {
               const level = game.upgrades[upgrade.id];
               const cost = getUpgradeCost(upgrade, level);
               const spriteIndex = spriteIndexByUpgrade[upgrade.id];
               const maxed = level >= upgrade.maxLevel;
+              const shortfall = Math.max(0, cost - game.coins);
               return (
                 <button
                   key={upgrade.id}
@@ -203,8 +211,12 @@ export default function App() {
                   <span>
                     <strong>{upgrade.label}</strong>
                     <small>
-                      {maxed ? "Maxed" : `${cost} coins`} · Lv {level}/
-                      {upgrade.maxLevel}
+                      {maxed
+                        ? "Maxed"
+                        : shortfall > 0
+                          ? `Cost: ${cost} Coins · Need ${shortfall} more`
+                          : `Cost: ${cost} Coins · Ready to buy`}{" "}
+                      · Lv {level}/{upgrade.maxLevel}
                     </small>
                   </span>
                 </button>

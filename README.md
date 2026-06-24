@@ -35,7 +35,7 @@ Players run a monochrome bed-and-breakfast for Normies:
 2. Click a waiting guest.
 3. Click the matching room or station before their patience runs out.
 4. Earn coins and reputation for good service.
-5. Buy upgrades between runs to expand the house, speed service, and stabilize the bioreactor.
+5. Buy upgrades between runs to expand room capacity, speed service, and stabilize the bioreactor.
 
 The core joke is also the core mechanic: a Zombie is not a bad guest, but serving them like a Human is catastrophically poor hospitality.
 

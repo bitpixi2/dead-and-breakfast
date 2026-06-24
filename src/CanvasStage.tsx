@@ -8,9 +8,10 @@ import {
   translateMobilePointToCanvas,
 } from "./game/layout";
 import { drawGame, drawMobileGame } from "./game/render";
+import { FALLBACK_IMAGE_URLS } from "./data/fallbackImages";
 import headerLogoDarkUrl from "./assets/dead-breakfast-header-logo-dark.png";
 import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
-import houseSpritesUrl from "./assets/house-upgrades-monochrome.png";
+import houseSpriteUrl from "./assets/house-sprite-monochrome.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
 import zombieKeyWarningUrl from "./assets/zombie-key-warning.png";
 
@@ -48,9 +49,10 @@ export function CanvasStage({
         ...state.roster.map((guest) => guest.imageUrl),
         ...state.queue.map((guest) => guest.guest.imageUrl),
         ...state.services.map((service) => service.guest.imageUrl),
+        ...FALLBACK_IMAGE_URLS,
         headerLogoDarkUrl,
         headerLogoUrl,
-        houseSpritesUrl,
+        houseSpriteUrl,
         roomIconsUrl,
         zombieKeyWarningUrl,
       ]),
@@ -143,7 +145,7 @@ export function CanvasStage({
       imagesRef.current.get(roomIconsUrl),
       imagesRef.current.get(headerLogoUrl),
       imagesRef.current.get(headerLogoDarkUrl),
-      imagesRef.current.get(houseSpritesUrl),
+      imagesRef.current.get(houseSpriteUrl),
       imagesRef.current.get(zombieKeyWarningUrl),
       timeMs / 1000,
       Math.max(0, (timeMs - ledgerLineStartedAtRef.current) / 1000),

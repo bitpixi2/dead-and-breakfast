@@ -9,6 +9,7 @@ import {
   getDayDifficulty,
   getEffectiveStationCapacity,
   getLabMeatClickGain,
+  getSpawnBatchSize,
   handleCanvasClick,
   renderGameToText,
   startNextDay,
@@ -40,7 +41,7 @@ describe("game engine", () => {
       coins: 50,
     };
     const blocked = handleCanvasClick(state, 500, 350);
-    const upgraded = buyUpgrade(blocked, "vipBell");
+    const upgraded = buyUpgrade(blocked, "bioreactorSpeed");
     const next = handleCanvasClick(upgraded, 500, 350);
 
     expect(blocked.mode).toBe("dayEnd");
@@ -191,16 +192,16 @@ describe("game engine", () => {
     expect(attempted.log[0]).toBe("That station is full.");
   });
 
-  it("can buy the D&B House Upgrade for the check-in house", () => {
+  it("can buy an operational upgrade for service flow", () => {
     const state = {
       ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
       coins: 50,
     };
-    const upgraded = buyUpgrade(state, "vipBell");
+    const upgraded = buyUpgrade(state, "bioreactorSpeed");
 
-    expect(upgraded.upgrades.vipBell).toBe(1);
+    expect(upgraded.upgrades.bioreactorSpeed).toBe(1);
     expect(upgraded.coins).toBeLessThan(state.coins);
-    expect(upgraded.log[0]).toContain("D&B House Upgrade");
+    expect(upgraded.log[0]).toContain("Zombie Room Service");
   });
 
   it("ramps day 3, 4, and 5 into faster harder service days", () => {
@@ -229,6 +230,15 @@ describe("game engine", () => {
     expect(dayFive.day).toBe(5);
     expect(dayFive.queue[0].patience).toBeLessThan(dayOne.queue[0].patience);
     expect(dayFive.spawnTimer).toBeLessThan(dayOne.spawnTimer);
+  });
+
+  it("uses steadier early arrivals and burstier later arrivals", () => {
+    expect(getSpawnBatchSize(1, 8)).toBe(1);
+    const lateBatches = Array.from({ length: 12 }, (_, index) =>
+      getSpawnBatchSize(6, index),
+    );
+
+    expect(lateBatches.some((size) => size > 1)).toBe(true);
   });
 
   it("drains lab-grown meat faster by day 5", () => {

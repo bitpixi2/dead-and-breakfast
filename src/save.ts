@@ -35,7 +35,6 @@ function coerceUpgradeLevels(value: unknown): UpgradeLevels {
     alienCleanRoom: readLevel(record.alienCleanRoom, defaults.alienCleanRoom),
     agentTerminal: readLevel(record.agentTerminal, defaults.agentTerminal),
     patienceBoost: readLevel(record.patienceBoost, defaults.patienceBoost),
-    vipBell: readLevel(record.vipBell, defaults.vipBell),
   };
 }
 

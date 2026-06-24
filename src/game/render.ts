@@ -1,4 +1,5 @@
 import type { CanvasStats, GameState, NormieGuest, StationId } from "../types";
+import { FALLBACK_IMAGE_URL_BY_TYPE } from "../data/fallbackImages";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -17,7 +18,11 @@ import {
   STATION_RECTS,
   type Rect,
 } from "./layout";
-import { canStartNextDayFromDayEnd, getEffectiveStationCapacity } from "./engine";
+import {
+  canStartNextDayFromDayEnd,
+  getEffectiveStationCapacity,
+  hasAffordableUpgrade,
+} from "./engine";
 import { getGuestRule, STATIONS } from "./rules";
 
 type ImageMap = Map<string, HTMLImageElement>;
@@ -59,9 +64,7 @@ export function drawGame(
       "Day Complete",
       canStartNextDayFromDayEnd(state) ? "Start next day" : null,
       overlayLogo,
-      canStartNextDayFromDayEnd(state)
-        ? "Upgrades chosen. Start next day."
-        : "Choose your upgrades in the side-menu",
+      getDayEndSubtitle(state, "Choose an affordable upgrade in the side-menu"),
     );
   }
 }
@@ -103,11 +106,24 @@ export function drawMobileGame(
       "Day Complete",
       canStartNextDayFromDayEnd(state) ? "Start next day" : null,
       overlayLogo,
-      canStartNextDayFromDayEnd(state)
-        ? "Upgrades chosen. Start next day."
-        : "Choose upgrades in the side-menu",
+      getDayEndSubtitle(state, "Choose an affordable upgrade in the side-menu"),
     );
   }
+}
+
+function getDayEndSubtitle(
+  state: GameState,
+  chooseMessage: string,
+): string {
+  if (state.dayEndUpgradeChoiceMade) {
+    return "Upgrade chosen. Start next day.";
+  }
+
+  if (!hasAffordableUpgrade(state)) {
+    return "No affordable upgrades. Start next day.";
+  }
+
+  return chooseMessage;
 }
 
 function drawMobileBackground(ctx: CanvasRenderingContext2D): void {
@@ -624,12 +640,12 @@ function drawQueue(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   images: ImageMap,
-  houseSprites?: HTMLImageElement,
+  houseSprite?: HTMLImageElement,
 ): void {
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
   ctx.fillText("Guest Check-In", 36, 112);
-  drawHotelEntranceSprite(ctx, houseSprites, state.upgrades.vipBell, 109, 122, 72);
+  drawHotelEntranceSprite(ctx, houseSprite, 109, 122, 72);
 
   if (state.queue.length === 0) {
     ctx.fillStyle = "#696b6c";
@@ -650,9 +666,6 @@ function drawQueue(
       ctx.strokeStyle = "#f8f9f7";
       ctx.lineWidth = 2;
       ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
-      ctx.fillStyle = "#f8f9f7";
-      ctx.font = "900 10px system-ui, sans-serif";
-      ctx.fillText("SELECTED", rect.x + rect.w - 70, rect.y + 18);
     }
 
     drawGuestImage(ctx, guest.guest, images, rect.x + 12, rect.y + 10, 46);
@@ -683,8 +696,7 @@ function drawQueue(
 
 function drawHotelEntranceSprite(
   ctx: CanvasRenderingContext2D,
-  houseSprites: HTMLImageElement | undefined,
-  level: number,
+  houseSprite: HTMLImageElement | undefined,
   x: number,
   y: number,
   size: number,
@@ -692,15 +704,13 @@ function drawHotelEntranceSprite(
   ctx.save();
   ctx.imageSmoothingEnabled = false;
 
-  if (houseSprites?.complete && houseSprites.naturalWidth > 0) {
-    const tileWidth = houseSprites.naturalWidth / 5;
-    const index = Math.max(0, Math.min(4, Math.floor(level)));
+  if (houseSprite?.complete && houseSprite.naturalWidth > 0) {
     ctx.drawImage(
-      houseSprites,
-      index * tileWidth,
+      houseSprite,
       0,
-      tileWidth,
-      houseSprites.naturalHeight,
+      0,
+      houseSprite.naturalWidth,
+      houseSprite.naturalHeight,
       x,
       y,
       size,
@@ -1335,11 +1345,14 @@ function drawGuestImage(
   size: number,
 ): void {
   const image = images.get(guest.imageUrl);
+  const fallbackImage = images.get(FALLBACK_IMAGE_URL_BY_TYPE[guest.type]);
   ctx.fillStyle = "#e3e5e4";
   ctx.fillRect(x, y, size, size);
 
   if (image?.complete && image.naturalWidth > 0) {
     ctx.drawImage(image, x, y, size, size);
+  } else if (fallbackImage?.complete && fallbackImage.naturalWidth > 0) {
+    ctx.drawImage(fallbackImage, x, y, size, size);
   } else {
     ctx.fillStyle = getGuestRule(guest.type).color;
     ctx.fillRect(x + size * 0.2, y + size * 0.2, size * 0.6, size * 0.6);

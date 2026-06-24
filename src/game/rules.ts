@@ -120,13 +120,6 @@ export const UPGRADE_DEFS: UpgradeDef[] = [
     maxLevel: 2,
     baseCost: 32,
   },
-  {
-    id: "vipBell",
-    label: "D&B House Upgrade",
-    description: "Improves the Guest Check-In house from booth to mansion.",
-    maxLevel: 4,
-    baseCost: 18,
-  },
 ];
 
 export function createDefaultUpgrades(): UpgradeLevels {
@@ -138,7 +131,6 @@ export function createDefaultUpgrades(): UpgradeLevels {
     alienCleanRoom: 0,
     agentTerminal: 0,
     patienceBoost: 0,
-    vipBell: 0,
   };
 }
 

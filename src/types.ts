@@ -56,7 +56,6 @@ export interface UpgradeLevels {
   alienCleanRoom: number;
   agentTerminal: number;
   patienceBoost: number;
-  vipBell: number;
 }
 
 export interface GuestInstance {

@@ -67,4 +67,14 @@ describe("Normies API normalization", () => {
     expect(merged.some((guest) => guest.type === "Cat")).toBe(true);
     expect(merged.some((guest) => guest.type === "Zombie")).toBe(true);
   });
+
+  it("uses saved monochrome Normie assets for fallback guests", () => {
+    const types = new Set(FALLBACK_GUESTS.map((guest) => guest.type));
+    const cat = FALLBACK_GUESTS.find((guest) => guest.type === "Cat");
+
+    expect(types).toEqual(new Set(["Zombie", "Human", "Alien", "Agent", "Cat"]));
+    expect(cat?.tokenId).toBe(133);
+    expect(cat?.imageUrl).toContain("fallback-cat");
+    expect(cat?.imageUrl.startsWith("data:image/svg+xml")).toBe(false);
+  });
 });
