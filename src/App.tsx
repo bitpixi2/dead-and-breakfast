@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { RotateCw, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import upgradeIconsUrl from "./assets/upgrade-icons-monochrome.png";
 import { CanvasStage } from "./CanvasStage";
 import {
@@ -135,10 +135,6 @@ export default function App() {
   return (
     <main className="app-shell">
       <section className="game-column">
-        <div className="rotate-phone-hint" role="status" aria-live="polite">
-          <RotateCw size={16} aria-hidden="true" />
-          <span>Turn phone horizontally to play</span>
-        </div>
         <CanvasStage
           state={game}
           stats={stats}
