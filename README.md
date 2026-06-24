@@ -4,9 +4,7 @@
 
 ---> [Play the live demo](https://dead-and-breakfast.pages.dev)
 
-You run a seaside hotel where every weary Normie visitor deserves prompt hospitality! Keep the Humans safe, serve Zombies lab-grown human meat, honor Alien tech, rush check-ins for Agents, and keep Cats happy with ocean-scrap chow, before the week gets out of hand! You have 7 game-days to survive Dead and Breakfast. NO WALLET CONNECT! Enter any Normie # and that owner receives on-chain rewards.
-
-Created by bitpixi - Normie #2613
+You run a seaside hotel where every weary Normie visitor deserves prompt hospitality! Keep the Humans safe, serve Zombies lab-grown human meat, honor Alien tech, rush check-ins for Agents, and keep Cats happy with ocean-scrap chow, before the week gets out of hand! You have 7 game-days to survive Dead and Breakfast. NO WALLET CONNECT! Enter any Normie # and that owner receives on-chain rewards. Created by bitpixi - Normie #2613
 
 ## Highlights
 
