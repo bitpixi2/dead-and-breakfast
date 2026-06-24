@@ -8,6 +8,7 @@ import {
   createGameState,
   getDayDifficulty,
   getEffectiveStationCapacity,
+  getLabMeatClickGain,
   handleCanvasClick,
   renderGameToText,
   startNextDay,
@@ -144,6 +145,39 @@ describe("game engine", () => {
     expect(getEffectiveStationCapacity("fishery", out)).toBe(0);
   });
 
+  it("pauses for a shortage warning and game-overs if a Human is out of their room", () => {
+    const playing = advanceGame(
+      startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      100,
+    );
+    const warning = advanceGame({ ...playing, labMeat: 0 }, 100);
+    const acknowledged = handleCanvasClick(warning, 500, 350);
+
+    expect(warning.mode).toBe("shortageWarning");
+    expect(warning.log[0]).toContain("eat a Human");
+    expect(acknowledged.mode).toBe("gameOver");
+    expect(acknowledged.gameOverKind).toBe("lost");
+    expect(acknowledged.gameOverReason).toContain("Human");
+  });
+
+  it("resumes after shortage warning when Humans are safely in the suite", () => {
+    const playing = advanceGame(
+      startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      100,
+    );
+    const selected = handleCanvasClick(playing, 60, 215);
+    const served = handleCanvasClick(selected, 310, 140);
+    const warning = advanceGame(
+      { ...served, labMeat: 0, labMeatShortageWarned: false },
+      100,
+    );
+    const acknowledged = handleCanvasClick(warning, 500, 350);
+
+    expect(warning.mode).toBe("shortageWarning");
+    expect(acknowledged.mode).toBe("playing");
+    expect(acknowledged.gameOverKind).toBeNull();
+  });
+
   it("blocks Human Safe Suite service during lab meat outage", () => {
     const playing = advanceGame(
       startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
@@ -208,5 +242,40 @@ describe("game engine", () => {
     const dayFiveAfter = advanceGame(dayFive, 4000);
 
     expect(dayFiveAfter.labMeat).toBeLessThan(baseAfter.labMeat);
+  });
+
+  it("makes day 6 and 7 harder on the lab-grown meat clicker", () => {
+    expect(getDayDifficulty(6).labDrainMultiplier).toBeGreaterThan(
+      getDayDifficulty(5).labDrainMultiplier,
+    );
+    expect(getDayDifficulty(7).labDrainMultiplier).toBeGreaterThan(
+      getDayDifficulty(6).labDrainMultiplier,
+    );
+    expect(getLabMeatClickGain(5)).toBe(2);
+    expect(getLabMeatClickGain(6)).toBe(1);
+    expect(getLabMeatClickGain(7)).toBe(1);
+  });
+
+  it("congratulates the player after surviving day 7", () => {
+    const state = {
+      ...startNextDay({
+        ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
+        mode: "dayEnd" as const,
+        day: 6,
+      }),
+      dayTime: 120,
+      dayDuration: 1,
+      dayRoster: [],
+      spawnIndex: 0,
+      queue: [],
+      services: [],
+    };
+    const won = advanceGame(state, 100);
+    const text = JSON.parse(renderGameToText(won));
+
+    expect(won.mode).toBe("gameOver");
+    expect(won.gameOverKind).toBe("won");
+    expect(won.gameOverReason).toContain("7 game-days");
+    expect(text.gameOverKind).toBe("won");
   });
 });

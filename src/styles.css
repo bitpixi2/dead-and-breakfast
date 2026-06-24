@@ -332,6 +332,10 @@ h2 {
     border-radius: 4px;
   }
 
+  .stage-wrap--mobile-board {
+    aspect-ratio: 390 / 680;
+  }
+
   .stage-wrap--mobile-board .game-canvas {
     width: 100%;
     height: auto;

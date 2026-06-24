@@ -1,3 +1,5 @@
+![Dead and Breakfast promo art](docs/images/dead-and-breakfast-readme-hero.png)
+
 # Dead and Breakfast
 
 **A walletless Normies API time-management game for the Normies Hackathon.**
@@ -36,6 +38,12 @@ Players run a monochrome bed-and-breakfast for Normies:
 5. Buy upgrades between runs to expand the house, speed service, and stabilize the bioreactor.
 
 The core joke is also the core mechanic: a Zombie is not a bad guest, but serving them like a Human is catastrophically poor hospitality.
+
+## In Progress
+
+| Desktop | Mobile |
+| --- | --- |
+| ![Desktop in-progress gameplay](docs/screenshots/desktop-in-progress.png) | ![Mobile in-progress gameplay](docs/screenshots/mobile-in-progress.png) |
 
 ## Normies API Use
 

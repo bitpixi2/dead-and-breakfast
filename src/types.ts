@@ -13,7 +13,12 @@ export type StationId =
   | "frontDesk"
   | "fishery";
 
-export type GameMode = "menu" | "playing" | "dayEnd";
+export type GameMode =
+  | "menu"
+  | "playing"
+  | "dayEnd"
+  | "shortageWarning"
+  | "gameOver";
 
 export interface NormieTrait {
   trait_type: string;
@@ -106,6 +111,9 @@ export interface GameState {
   labMeatMax: number;
   labMeatClickPulseUntil: number;
   labMeatShortageUntil: number;
+  labMeatShortageWarned: boolean;
+  gameOverReason: string | null;
+  gameOverKind: "won" | "lost" | null;
 }
 
 export interface GameSaveV1 {

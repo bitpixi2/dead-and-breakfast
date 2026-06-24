@@ -31,6 +31,7 @@ export function drawGame(
   headerLogo?: HTMLImageElement,
   overlayLogo?: HTMLImageElement,
   houseSprites?: HTMLImageElement,
+  warningPortrait?: HTMLImageElement,
   renderTime = 0,
   ledgerLineAge = 999,
 ): void {
@@ -46,7 +47,11 @@ export function drawGame(
     drawPauseOverlay(ctx);
   }
 
-  if (state.mode === "menu") {
+  if (state.mode === "shortageWarning") {
+    drawShortageWarningOverlay(ctx, warningPortrait);
+  } else if (state.mode === "gameOver") {
+    drawGameOverOverlay(ctx, state, renderTime);
+  } else if (state.mode === "menu") {
     drawOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
     drawOverlay(
@@ -70,6 +75,7 @@ export function drawMobileGame(
   headerLogo?: HTMLImageElement,
   overlayLogo?: HTMLImageElement,
   _houseSprites?: HTMLImageElement,
+  warningPortrait?: HTMLImageElement,
   renderTime = 0,
   ledgerLineAge = 999,
 ): void {
@@ -85,7 +91,11 @@ export function drawMobileGame(
     drawMobilePauseOverlay(ctx);
   }
 
-  if (state.mode === "menu") {
+  if (state.mode === "shortageWarning") {
+    drawMobileShortageWarningOverlay(ctx, warningPortrait);
+  } else if (state.mode === "gameOver") {
+    drawMobileGameOverOverlay(ctx, state, renderTime);
+  } else if (state.mode === "menu") {
     drawMobileOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
     drawMobileOverlay(
@@ -399,6 +409,95 @@ function drawMobileOverlay(
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 16px system-ui, sans-serif";
   drawCenteredText(ctx, buttonLabel, rect.x + rect.w / 2, rect.y + 31);
+}
+
+function drawMobileShortageWarningOverlay(
+  ctx: CanvasRenderingContext2D,
+  warningPortrait?: HTMLImageElement,
+): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.76)";
+  ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(18, 186, 354, 312);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(18, 186, 354, 312);
+  drawWarningPortrait(ctx, warningPortrait, 34, 210, 118);
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 18px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("MEAT SHORTAGE", 166, 224);
+  ctx.font = "800 13px system-ui, sans-serif";
+  wrapText(
+    ctx,
+    "There's no more lab-grown Human meat. We're going to eat a Human if they're out of their room.",
+    166,
+    254,
+    178,
+    18,
+  );
+
+  const rect = MOBILE_OVERLAY_BUTTON_RECT;
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(rect.x - 4, rect.y + 4, rect.w + 8, rect.h);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x + 7, rect.y + 7, rect.w - 14, rect.h - 14);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 16px system-ui, sans-serif";
+  drawCenteredText(ctx, "OK", rect.x + rect.w / 2, rect.y + 31);
+}
+
+function drawMobileGameOverOverlay(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  renderTime: number,
+): void {
+  const won = state.gameOverKind === "won";
+  if (won) {
+    drawConfetti(ctx, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT, renderTime);
+  }
+
+  ctx.fillStyle = "rgba(37, 38, 40, 0.74)";
+  ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(26, 218, 338, won ? 258 : 222);
+  ctx.strokeStyle = won ? "#f8f9f7" : "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(26, 218, 338, won ? 258 : 222);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(36, 228, 318, won ? 238 : 202);
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 25px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 195, 268);
+  ctx.font = "800 14px system-ui, sans-serif";
+  wrapText(
+    ctx,
+    won
+      ? "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered."
+      : (state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe."),
+    58,
+    304,
+    274,
+    19,
+  );
+
+  const rect = MOBILE_OVERLAY_BUTTON_RECT;
+  const buttonY = rect.y;
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(rect.x - 4, buttonY + 4, rect.w + 8, rect.h);
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(rect.x, buttonY, rect.w, rect.h);
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x + 7, buttonY + 7, rect.w - 14, rect.h - 14);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 16px system-ui, sans-serif";
+  drawCenteredText(ctx, won ? "Play again" : "Restart game", rect.x + rect.w / 2, buttonY + 31);
 }
 
 function drawMobilePauseOverlay(ctx: CanvasRenderingContext2D): void {
@@ -1018,6 +1117,172 @@ function drawOverlay(
     OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
     OVERLAY_BUTTON_RECT.y + 28,
   );
+}
+
+function drawShortageWarningOverlay(
+  ctx: CanvasRenderingContext2D,
+  warningPortrait?: HTMLImageElement,
+): void {
+  ctx.fillStyle = "rgba(37, 38, 40, 0.76)";
+  ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(248, 168, 604, 306);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(248, 168, 604, 306);
+  ctx.strokeStyle = "#696b6c";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(260, 180, 580, 282);
+  drawWarningPortrait(ctx, warningPortrait, 284, 202, 184);
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 30px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText("MEAT SHORTAGE", 500, 224);
+  ctx.font = "800 18px system-ui, sans-serif";
+  wrapText(
+    ctx,
+    "There's no more lab-grown Human meat. We're going to eat a Human if they're out of their room.",
+    500,
+    270,
+    292,
+    25,
+  );
+
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(
+    OVERLAY_BUTTON_RECT.x - 4,
+    OVERLAY_BUTTON_RECT.y + 4,
+    OVERLAY_BUTTON_RECT.w + 8,
+    OVERLAY_BUTTON_RECT.h,
+  );
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(
+    OVERLAY_BUTTON_RECT.x,
+    OVERLAY_BUTTON_RECT.y,
+    OVERLAY_BUTTON_RECT.w,
+    OVERLAY_BUTTON_RECT.h,
+  );
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    OVERLAY_BUTTON_RECT.x + 7,
+    OVERLAY_BUTTON_RECT.y + 7,
+    OVERLAY_BUTTON_RECT.w - 14,
+    OVERLAY_BUTTON_RECT.h - 14,
+  );
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 17px system-ui, sans-serif";
+  drawCenteredText(
+    ctx,
+    "OK",
+    OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
+    OVERLAY_BUTTON_RECT.y + 28,
+  );
+}
+
+function drawGameOverOverlay(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  renderTime: number,
+): void {
+  const won = state.gameOverKind === "won";
+  if (won) {
+    drawConfetti(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, renderTime);
+  }
+
+  ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
+  ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
+  ctx.fillStyle = "#f8f9f7";
+  ctx.fillRect(310, 186, 480, won ? 278 : 230);
+  ctx.strokeStyle = won ? "#f8f9f7" : "#252628";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(310, 186, 480, won ? 278 : 230);
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(322, 198, 456, won ? 254 : 206);
+
+  ctx.fillStyle = "#252628";
+  ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 550, 252);
+  ctx.font = "800 18px system-ui, sans-serif";
+  wrapText(
+    ctx,
+    won
+      ? "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered."
+      : (state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe."),
+    382,
+    304,
+    336,
+    25,
+  );
+
+  const buttonY = OVERLAY_BUTTON_RECT.y;
+  ctx.fillStyle = "#111214";
+  ctx.fillRect(
+    OVERLAY_BUTTON_RECT.x - 4,
+    buttonY + 4,
+    OVERLAY_BUTTON_RECT.w + 8,
+    OVERLAY_BUTTON_RECT.h,
+  );
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(OVERLAY_BUTTON_RECT.x, buttonY, OVERLAY_BUTTON_RECT.w, OVERLAY_BUTTON_RECT.h);
+  ctx.strokeStyle = "#f8f9f7";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(
+    OVERLAY_BUTTON_RECT.x + 7,
+    buttonY + 7,
+    OVERLAY_BUTTON_RECT.w - 14,
+    OVERLAY_BUTTON_RECT.h - 14,
+  );
+  ctx.fillStyle = "#f8f9f7";
+  ctx.font = "900 17px system-ui, sans-serif";
+  drawCenteredText(
+    ctx,
+    won ? "Play again" : "Restart game",
+    OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
+    buttonY + 28,
+  );
+}
+
+function drawWarningPortrait(
+  ctx: CanvasRenderingContext2D,
+  warningPortrait: HTMLImageElement | undefined,
+  x: number,
+  y: number,
+  size: number,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#e3e5e4";
+  ctx.fillRect(x, y, size, size);
+  if (warningPortrait?.complete && warningPortrait.naturalWidth > 0) {
+    ctx.drawImage(warningPortrait, x, y, size, size);
+  } else {
+    ctx.fillStyle = "#48494b";
+    ctx.fillRect(x + size * 0.25, y + size * 0.18, size * 0.5, size * 0.64);
+  }
+  ctx.strokeStyle = "#252628";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, size, size);
+  ctx.restore();
+}
+
+function drawConfetti(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  renderTime: number,
+): void {
+  ctx.save();
+  const colors = ["#f8f9f7", "#d7dad9", "#696b6c", "#252628"];
+  for (let index = 0; index < 72; index += 1) {
+    const x = (index * 47) % width;
+    const fall = (renderTime * (42 + (index % 5) * 8) + index * 29) % height;
+    const y = Math.floor(fall);
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.fillRect(x, y, 5 + (index % 3), 9);
+  }
+  ctx.restore();
 }
 
 function drawOverlayTitle(

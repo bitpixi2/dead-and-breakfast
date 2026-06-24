@@ -8,6 +8,7 @@ import type {
   StationId,
 } from "../types";
 import {
+  createDefaultUpgrades,
   getGuestRule,
   getPatienceSeconds,
   getServiceDurationSeconds,
@@ -26,6 +27,9 @@ const LAB_MEAT_CLICK_GAIN = 2;
 const LAB_MEAT_DECAY_PER_SECOND = 0.25;
 const LAB_MEAT_FLASH_SECONDS = 2.4;
 const LAB_MEAT_CLICK_PULSE_SECONDS = 0.35;
+const FINAL_DAY = 7;
+const SHORTAGE_WARNING =
+  "There's no more lab-grown Human meat. We're going to eat a Human if they're out of their room.";
 
 interface DayDifficulty {
   spawnMultiplier: number;
@@ -73,6 +77,9 @@ export function createGameState(
     labMeatMax: LAB_MEAT_MAX,
     labMeatClickPulseUntil: 0,
     labMeatShortageUntil: 0,
+    labMeatShortageWarned: false,
+    gameOverReason: null,
+    gameOverKind: null,
   };
 }
 
@@ -99,7 +106,7 @@ export function addGuestToRoster(
 }
 
 export function startNextDay(state: GameState): GameState {
-  const day = state.mode === "dayEnd" ? state.day + 1 : state.day;
+  const day = state.mode === "dayEnd" ? Math.min(FINAL_DAY, state.day + 1) : state.day;
   const dayDuration = Math.min(112, 76 + day * 5);
   const dayRoster = buildDayRoster(state.roster, day, Math.min(14, 6 + day));
 
@@ -126,6 +133,9 @@ export function startNextDay(state: GameState): GameState {
     labMeatMax: LAB_MEAT_MAX,
     labMeatClickPulseUntil: 0,
     labMeatShortageUntil: 0,
+    labMeatShortageWarned: false,
+    gameOverReason: null,
+    gameOverKind: null,
     log: [`Day ${day}: doors open. Click a guest, then a station.`],
   };
 }
@@ -205,13 +215,20 @@ export function updateGame(state: GameState, deltaMs: number): GameState {
     next.queue.length === 0 &&
     next.services.length === 0
   ) {
-    next.mode = "dayEnd";
-    next.dayEndUpgradeChoiceMade = false;
     next.bestScore = Math.max(next.bestScore, next.score);
-    next.log = pushLog(next.log, `Day ${next.day} closed. Buy upgrades.`);
+    if (next.day >= FINAL_DAY) {
+      next.mode = "gameOver";
+      next.gameOverReason = "You survived all 7 game-days. Dead and Breakfast lives.";
+      next.gameOverKind = "won";
+      next.log = pushLog(next.log, "Seven game-days survived. Service complete.");
+    } else {
+      next.mode = "dayEnd";
+      next.dayEndUpgradeChoiceMade = false;
+      next.log = pushLog(next.log, `Day ${next.day} closed. Buy upgrades.`);
+    }
   }
 
-  return next;
+  return maybeTriggerShortageWarning(next);
 }
 
 function spawnNextGuest(state: GameState): GameState {
@@ -289,6 +306,16 @@ export function handleCanvasClick(
       canStartNextDayFromDayEnd(state)
       ? startNextDay(state)
       : state;
+  }
+
+  if (state.mode === "shortageWarning") {
+    return rectContains(OVERLAY_BUTTON_RECT, x, y)
+      ? resolveShortageWarning(state)
+      : state;
+  }
+
+  if (state.mode === "gameOver") {
+    return rectContains(OVERLAY_BUTTON_RECT, x, y) ? restartGame(state) : state;
   }
 
   if (state.mode !== "playing") {
@@ -408,8 +435,10 @@ function drainLabMeat(state: GameState, dt: number): GameState {
 
   return {
     ...state,
+    mode: "shortageWarning",
     labMeat: 0,
     labMeatShortageUntil: state.dayTime + LAB_MEAT_FLASH_SECONDS,
+    labMeatShortageWarned: true,
     log: pushLog(
       state.log,
       "OUT OF HUMAN LAB-GROWN MEAT. Human Suite closed; Cat chow space lost.",
@@ -425,16 +454,23 @@ export function clickLabMeat(state: GameState): GameState {
   const wasOut = state.labMeat <= 0;
   const labMeat = Math.min(
     state.labMeatMax,
-    Math.ceil(state.labMeat) + LAB_MEAT_CLICK_GAIN,
+    Math.ceil(state.labMeat) + getLabMeatClickGain(state.day),
   );
   return {
     ...state,
     labMeat,
+    labMeatShortageWarned: labMeat > 0 ? false : state.labMeatShortageWarned,
     labMeatClickPulseUntil: state.dayTime + LAB_MEAT_CLICK_PULSE_SECONDS,
     log: wasOut
       ? pushLog(state.log, "Lab-grown meat restored. Human and Cat rooms reopened.")
       : state.log,
   };
+}
+
+export function getLabMeatClickGain(day: number): number {
+  if (day >= 7) return 1;
+  if (day >= 6) return 1;
+  return LAB_MEAT_CLICK_GAIN;
 }
 
 export function getEffectiveStationCapacity(
@@ -513,10 +549,80 @@ function hasHumanNearby(state: GameState): boolean {
   );
 }
 
-export function getDayDifficulty(day: number): DayDifficulty {
-  const extraDay = Math.max(0, day - 5);
+function hasUnsafeHumanOutOfRoom(state: GameState): boolean {
+  return (
+    state.queue.some((guest) => guest.type === "Human") ||
+    state.services.some(
+      (service) => service.type === "Human" && service.stationId !== "suite",
+    )
+  );
+}
 
-  if (day <= 2) {
+function maybeTriggerShortageWarning(state: GameState): GameState {
+  if (state.mode !== "playing" || state.labMeat > 0) {
+    return state;
+  }
+
+  if (hasUnsafeHumanOutOfRoom(state) || !state.labMeatShortageWarned) {
+    return {
+      ...state,
+      mode: "shortageWarning",
+      labMeatShortageWarned: true,
+      labMeatShortageUntil: Math.max(
+        state.labMeatShortageUntil,
+        state.dayTime + LAB_MEAT_FLASH_SECONDS,
+      ),
+      log: pushLog(state.log, SHORTAGE_WARNING),
+    };
+  }
+
+  return state;
+}
+
+function resolveShortageWarning(state: GameState): GameState {
+  if (hasUnsafeHumanOutOfRoom(state)) {
+    return {
+      ...state,
+      mode: "gameOver",
+      paused: false,
+      selectedGuestId: null,
+      bestScore: Math.max(state.bestScore, state.score),
+      gameOverReason:
+        "A Human was out of their Safe Suite during the meat shortage.",
+      gameOverKind: "lost",
+      log: pushLog(state.log, "GAME OVER: A Human was out of their Safe Suite."),
+    };
+  }
+
+  return {
+    ...state,
+    mode: "playing",
+    paused: false,
+    log: pushLog(state.log, "Warning acknowledged. Keep Humans in their Safe Suite."),
+  };
+}
+
+function restartGame(state: GameState): GameState {
+  return createGameState(state.roster, {
+    version: 1,
+    day: 1,
+    coins: 24,
+    reputation: 10,
+    bestScore: state.bestScore,
+    upgrades: createDefaultUpgrades(),
+    discoveredTokenIds: state.roster
+      .filter((guest) => guest.source === "api" || guest.source === "manual")
+      .map((guest) => guest.tokenId),
+    settings: { reducedMotion: false },
+    savedAt: new Date().toISOString(),
+  });
+}
+
+export function getDayDifficulty(day: number): DayDifficulty {
+  const cappedDay = Math.min(FINAL_DAY, day);
+  const extraDay = Math.max(0, cappedDay - 5);
+
+  if (cappedDay <= 2) {
     return {
       spawnMultiplier: 1,
       minSpawnSeconds: 3.4,
@@ -526,7 +632,7 @@ export function getDayDifficulty(day: number): DayDifficulty {
     };
   }
 
-  if (day === 3) {
+  if (cappedDay === 3) {
     return {
       spawnMultiplier: 0.9,
       minSpawnSeconds: 3.1,
@@ -536,13 +642,33 @@ export function getDayDifficulty(day: number): DayDifficulty {
     };
   }
 
-  if (day === 4) {
+  if (cappedDay === 4) {
     return {
       spawnMultiplier: 0.82,
       minSpawnSeconds: 2.85,
       patienceMultiplier: 0.88,
       serviceMultiplier: 0.91,
       labDrainMultiplier: 1.22,
+    };
+  }
+
+  if (cappedDay === 6) {
+    return {
+      spawnMultiplier: 0.7,
+      minSpawnSeconds: 2.45,
+      patienceMultiplier: 0.8,
+      serviceMultiplier: 0.86,
+      labDrainMultiplier: 1.72,
+    };
+  }
+
+  if (cappedDay >= 7) {
+    return {
+      spawnMultiplier: 0.64,
+      minSpawnSeconds: 2.25,
+      patienceMultiplier: 0.74,
+      serviceMultiplier: 0.82,
+      labDrainMultiplier: 2.05,
     };
   }
 
@@ -657,6 +783,8 @@ export function renderGameToText(state: GameState): string {
       "Canvas origin is top-left; x increases right and y increases down.",
     mode: state.mode,
     paused: state.paused,
+    gameOverKind: state.gameOverKind,
+    gameOverReason: state.gameOverReason,
     day: state.day,
     dayTime: Number(state.dayTime.toFixed(1)),
     resources: {
@@ -696,6 +824,8 @@ export function renderGameToText(state: GameState): string {
       max: state.labMeatMax,
       shortageActive: state.labMeat <= 0,
       shortageFlashActive: state.labMeatShortageUntil > state.dayTime,
+      shortageWarned: state.labMeatShortageWarned,
+      clickGain: getLabMeatClickGain(state.day),
     },
     log: state.log.slice(0, 3),
   });
