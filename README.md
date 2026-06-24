@@ -4,13 +4,9 @@
 
 **You run a seaside hotel where every weary Normie visitor deserves prompt hospitality!**
 
-[Play the live demo](https://dead-and-breakfast.pages.dev) · [Normies API](https://api.normies.art)
+[Play the live demo](https://dead-and-breakfast.pages.dev)
 
-Keep the Humans safe, serve Zombies lab-grown human meat, honor Alien tech, rush check-ins for Agents, and keep Cats happy with ocean-scrap chow, before the week gets out of hand!
-
-You have 7 game-days to survive Dead and Breakfast.
-
-NO WALLET CONNECT! Enter any Normie # and that owner receives on-chain rewards.
+Keep the Humans safe, serve Zombies lab-grown human meat, honor Alien tech, rush check-ins for Agents, and keep Cats happy with ocean-scrap chow, before the week gets out of hand! You have 7 game-days to survive Dead and Breakfast. NO WALLET CONNECT! Enter any Normie # and that owner receives on-chain rewards.
 
 Created by bitpixi - Normie #2613
 
@@ -22,6 +18,12 @@ Created by bitpixi - Normie #2613
 - Includes a complete 7 game days with patience timers, service stations, coins, misses, upgrades, and local save persistence.
 - Monochrome art direction to match Normies.
 
+## In Progress
+
+| Desktop | Mobile |
+| --- | --- |
+| ![Desktop in-progress gameplay](docs/screenshots/desktop-in-progress.png) | ![Mobile in-progress gameplay](docs/screenshots/mobile-in-progress.png) |
+
 ## Gameplay
 
 1. Start the first day.
@@ -29,12 +31,6 @@ Created by bitpixi - Normie #2613
 3. Click the matching room or station before their patience runs out.
 4. Click rapidly to produce lab-grown meat.
 4. Earn coins for good service that you can use to purchase upgrades. 
-
-## In Progress
-
-| Desktop | Mobile |
-| --- | --- |
-| ![Desktop in-progress gameplay](docs/screenshots/desktop-in-progress.png) | ![Mobile in-progress gameplay](docs/screenshots/mobile-in-progress.png) |
 
 ## Normies API Use
 
