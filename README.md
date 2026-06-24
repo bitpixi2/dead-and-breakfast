@@ -63,17 +63,8 @@ The core joke is also the core mechanic: a Zombie is not a bad guest, but servin
 - Vitest coverage for game rules, engine behavior, API normalization, and save migration
 - Cloudflare Pages deployment
 
-```bash
-npm install
-npm run dev
-npm test
-npm run build
-```
+## Demo
 
-The app uses the live Normies API when available and falls back to a local demo roster when the API is unavailable.
+Play it here: [dead-and-breakfast.pages.dev](https://dead-and-breakfast.pages.dev)
 
-## Deployment
-
-```bash
-npm run deploy
-```
+The app uses the live Normies API when available and falls back to a demo roster when the API is unavailable.
