@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_GUESTS } from "../data/demoGuests";
 import { createDefaultSave } from "../save";
+import { SHORTAGE_OVERLAY_BUTTON_RECT } from "./layout";
 import {
   advanceGame,
   buyUpgrade,
@@ -16,6 +17,11 @@ import {
 } from "./engine";
 
 describe("game engine", () => {
+  const shortageOk = {
+    x: SHORTAGE_OVERLAY_BUTTON_RECT.x + SHORTAGE_OVERLAY_BUTTON_RECT.w / 2,
+    y: SHORTAGE_OVERLAY_BUTTON_RECT.y + SHORTAGE_OVERLAY_BUTTON_RECT.h / 2,
+  };
+
   it("starts a day and exposes deterministic text state", () => {
     const state = startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave()));
     const advanced = advanceGame(state, 100);
@@ -152,7 +158,7 @@ describe("game engine", () => {
       100,
     );
     const warning = advanceGame({ ...playing, labMeat: 0 }, 100);
-    const acknowledged = handleCanvasClick(warning, 500, 350);
+    const acknowledged = handleCanvasClick(warning, shortageOk.x, shortageOk.y);
 
     expect(warning.mode).toBe("shortageWarning");
     expect(warning.log[0]).toContain("eat a Human");
@@ -172,7 +178,7 @@ describe("game engine", () => {
       { ...served, labMeat: 0, labMeatShortageWarned: false },
       100,
     );
-    const acknowledged = handleCanvasClick(warning, 500, 350);
+    const acknowledged = handleCanvasClick(warning, shortageOk.x, shortageOk.y);
 
     expect(warning.mode).toBe("shortageWarning");
     expect(acknowledged.mode).toBe("playing");

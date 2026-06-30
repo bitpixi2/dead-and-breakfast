@@ -25,6 +25,14 @@ export interface ApiLoadResult {
   message: string;
 }
 
+export interface NormieEntryLogResult {
+  ok: boolean;
+  tokenId: number;
+  owner: string | null;
+  type: string;
+  enteredAt: string;
+}
+
 export interface NormiesClientOptions {
   fetcher?: FetchLike;
   storage?: Storage | null;
@@ -158,6 +166,28 @@ export async function fetchNormieGuest(
   const guest = normalizeNormieMetadata(tokenId, metadata, "api");
   writeCached(cacheKey, guest, storage, now);
   return guest;
+}
+
+export async function logNormieEntry(
+  tokenId: number,
+  options: Pick<NormiesClientOptions, "fetcher"> = {},
+): Promise<NormieEntryLogResult> {
+  if (!Number.isInteger(tokenId) || tokenId < 0 || tokenId > 9999) {
+    throw new Error("Token ID must be an integer from 0 to 9999.");
+  }
+
+  const fetcher = options.fetcher ?? fetch;
+  const response = await fetcher("/api/normie-entry", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tokenId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Entry log returned ${response.status}`);
+  }
+
+  return (await response.json()) as NormieEntryLogResult;
 }
 
 export async function fetchCanvasStats(

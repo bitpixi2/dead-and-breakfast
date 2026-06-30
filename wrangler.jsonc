@@ -1,6 +1,13 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "dead-and-breakfast",
-  "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-06-22"
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "dead-and-breakfast",
+	"pages_build_output_dir": "./dist",
+	"compatibility_date": "2026-06-22",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "dead-and-breakfast",
+			"database_id": "168d6ec9-7ddf-45d4-912a-2ba3ac36bd0a"
+		}
+	]
 }

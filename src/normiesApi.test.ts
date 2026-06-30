@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   fetchNormieGuest,
+  logNormieEntry,
   mergeRoster,
   normalizeNormieMetadata,
 } from "./normiesApi";
@@ -76,5 +77,31 @@ describe("Normies API normalization", () => {
     expect(cat?.tokenId).toBe(133);
     expect(cat?.imageUrl).toContain("fallback-cat");
     expect(cat?.imageUrl.startsWith("data:image/svg+xml")).toBe(false);
+  });
+
+  it("logs entered token IDs through the backend endpoint", async () => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      return {
+        ok: true,
+        json: async () => ({
+          ok: true,
+          tokenId: 2613,
+          owner: "0xb7d3a787a39f25457ca511dc3f0591b546f5e02f",
+          type: "Human",
+          enteredAt: "2026-06-30T00:00:00.000Z",
+        }),
+      } as Response;
+    });
+
+    const result = await logNormieEntry(2613, { fetcher });
+
+    expect(result.owner).toBe("0xb7d3a787a39f25457ca511dc3f0591b546f5e02f");
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/normie-entry",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ tokenId: 2613 }),
+      }),
+    );
   });
 });

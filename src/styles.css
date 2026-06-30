@@ -45,11 +45,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.app-shell {
+.app-page {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
   min-height: 100vh;
   padding: 18px;
   background:
@@ -69,6 +66,13 @@ button:disabled {
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
+}
+
+.app-shell {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
 }
 
 .game-column,
@@ -160,8 +164,8 @@ h2 {
   min-width: 0;
 }
 
-.side-panel--flash .panel-section {
-  animation: side-menu-upgrade-pulse 820ms steps(2, end) infinite;
+.side-panel--flash .panel-section--upgrades {
+  animation: side-menu-upgrade-pulse 620ms steps(2, end) 3;
 }
 
 .panel-section {
@@ -289,6 +293,92 @@ h2 {
   background: #e5e7e6;
 }
 
+.site-footer {
+  position: relative;
+  z-index: 1;
+  max-width: 1678px;
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  border: 2px solid rgba(72, 73, 75, 0.28);
+  border-radius: 4px;
+  background: rgba(248, 249, 247, 0.88);
+  color: var(--pixel);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.site-footer a,
+.site-footer button {
+  color: var(--ink);
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer button {
+  display: inline;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.legal-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(37, 38, 40, 0.66);
+}
+
+.legal-modal {
+  width: min(680px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  border: 4px solid var(--ink);
+  outline: 2px solid rgba(72, 73, 75, 0.72);
+  outline-offset: -16px;
+  background: var(--paper);
+  box-shadow: 8px 8px 0 rgba(37, 38, 40, 0.9);
+  color: var(--ink);
+  padding: 32px 34px 24px;
+}
+
+.legal-modal h2 {
+  margin: 0 0 18px;
+  font-family: "GeistMono", "Courier New", monospace;
+  font-size: 2rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.legal-modal p {
+  margin: 0 0 14px;
+  font-size: 0.98rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.legal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.legal-actions button {
+  min-width: 136px;
+  min-height: 42px;
+  border: 3px solid var(--paper);
+  outline: 4px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
 @media (max-width: 1040px) {
   .app-shell {
     flex-direction: column;
@@ -309,14 +399,17 @@ h2 {
     min-height: 100dvh;
   }
 
+  .app-page {
+    min-height: 100dvh;
+    padding: 6px;
+    background-attachment: scroll;
+    background-position: center top;
+  }
+
   .app-shell {
     display: flex;
     flex-direction: column;
-    min-height: 100dvh;
-    padding: 6px;
     overflow-x: hidden;
-    background-attachment: scroll;
-    background-position: center top;
   }
 
   .game-column {
@@ -345,9 +438,31 @@ h2 {
     grid-template-columns: 1fr;
     margin-top: 10px;
   }
+
+  .site-footer {
+    margin-top: 10px;
+    padding: 9px 10px;
+    font-size: 0.74rem;
+  }
+
+  .legal-modal {
+    padding: 28px 22px 20px;
+  }
+
+  .legal-modal h2 {
+    font-size: 1.62rem;
+  }
 }
 
 @media (max-width: 920px) and (orientation: landscape) {
+  .app-page {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 6px;
+    overflow: hidden;
+    background-attachment: scroll;
+  }
+
   .app-shell {
     display: flex;
     flex-direction: row;
@@ -355,9 +470,7 @@ h2 {
     gap: 8px;
     height: 100dvh;
     min-height: 100dvh;
-    padding: 6px;
     overflow: hidden;
-    background-attachment: scroll;
   }
 
   .stage-wrap {
@@ -413,6 +526,14 @@ h2 {
     height: 100dvh;
     min-height: 100dvh;
     gap: 6px;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .app-page {
+    width: 100dvw;
+    height: 100dvh;
+    min-height: 100dvh;
     padding: 0 6px;
     overflow: hidden;
     background: var(--pixel);
@@ -505,10 +626,14 @@ h2 {
   .form-note {
     font-size: 0.68rem;
   }
+
+  .site-footer {
+    display: none;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 780px) {
-  .app-shell {
+  .app-page {
     padding: 0;
   }
 

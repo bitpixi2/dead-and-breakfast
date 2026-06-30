@@ -26,10 +26,22 @@ export const STATION_RECTS: Record<StationId, Rect> = {
 };
 
 export const OVERLAY_BUTTON_RECT: Rect = { x: 432, y: 334, w: 236, h: 44 };
+export const SHORTAGE_OVERLAY_BUTTON_RECT: Rect = {
+  x: 500,
+  y: 382,
+  w: 292,
+  h: 44,
+};
 export const LAB_CLICKER_RECT: Rect = { x: 820, y: 272, w: 250, h: 150 };
 export const PAUSE_BUTTON_RECT: Rect = { x: 986, y: 18, w: 84, h: 34 };
 
 export const MOBILE_OVERLAY_BUTTON_RECT: Rect = { x: 84, y: 374, w: 222, h: 50 };
+export const MOBILE_SHORTAGE_OVERLAY_BUTTON_RECT: Rect = {
+  x: 164,
+  y: 414,
+  w: 180,
+  h: 44,
+};
 export const MOBILE_PAUSE_BUTTON_RECT: Rect = { x: 314, y: 16, w: 58, h: 32 };
 export const MOBILE_LAB_CLICKER_RECT: Rect = { x: 202, y: 532, w: 174, h: 116 };
 
@@ -116,6 +128,10 @@ export function translateMobilePointToCanvas(
 
   if (contains(MOBILE_OVERLAY_BUTTON_RECT, x, y)) {
     return centerOf(OVERLAY_BUTTON_RECT);
+  }
+
+  if (contains(MOBILE_SHORTAGE_OVERLAY_BUTTON_RECT, x, y)) {
+    return centerOf(SHORTAGE_OVERLAY_BUTTON_RECT);
   }
 
   for (let index = 0; index < queueIds.length; index += 1) {

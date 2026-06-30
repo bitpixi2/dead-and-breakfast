@@ -18,7 +18,12 @@ import {
   serviceOutcome,
   UPGRADE_DEFS,
 } from "./rules";
-import { hitTestCanvas, OVERLAY_BUTTON_RECT, rectContains } from "./layout";
+import {
+  hitTestCanvas,
+  OVERLAY_BUTTON_RECT,
+  rectContains,
+  SHORTAGE_OVERLAY_BUTTON_RECT,
+} from "./layout";
 
 const MAX_LOG_LINES = 6;
 const LAB_MEAT_START = 10;
@@ -338,7 +343,7 @@ export function handleCanvasClick(
   }
 
   if (state.mode === "shortageWarning") {
-    return rectContains(OVERLAY_BUTTON_RECT, x, y)
+    return rectContains(SHORTAGE_OVERLAY_BUTTON_RECT, x, y)
       ? resolveShortageWarning(state)
       : state;
   }

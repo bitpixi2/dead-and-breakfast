@@ -9,9 +9,11 @@ import {
   MOBILE_LAB_CLICKER_RECT,
   MOBILE_OVERLAY_BUTTON_RECT,
   MOBILE_PAUSE_BUTTON_RECT,
+  MOBILE_SHORTAGE_OVERLAY_BUTTON_RECT,
   MOBILE_STATION_RECTS,
   OVERLAY_BUTTON_RECT,
   PAUSE_BUTTON_RECT,
+  SHORTAGE_OVERLAY_BUTTON_RECT,
   mobileQueueRectForIndex,
   queueRectForIndex,
   STATION_GUTTER,
@@ -27,6 +29,14 @@ import {
 import { getGuestRule, STATIONS } from "./rules";
 
 type ImageMap = Map<string, HTMLImageElement>;
+const FINAL_DAY_COUNT = 7;
+
+interface HeaderMetric {
+  label: string;
+  value: string;
+  alert?: boolean;
+  width: number;
+}
 
 export function drawGame(
   ctx: CanvasRenderingContext2D,
@@ -158,20 +168,24 @@ function drawMobileHeader(
 
   const timeLeft = Math.max(0, Math.ceil(state.dayDuration - state.dayTime));
   const metrics = [
-    `DAY ${state.day}`,
-    state.mode === "playing" ? `${timeLeft}s` : "READY",
-    `MEAT ${Math.ceil(state.labMeat)}/${state.labMeatMax}`,
-    `COINS ${state.coins}`,
+    { label: "DAY", value: `${state.day}/${FINAL_DAY_COUNT}`, width: 76 },
+    {
+      label: "TIME",
+      value: state.mode === "playing" ? `${timeLeft}s` : "READY",
+      width: 90,
+    },
+    {
+      label: "MEAT",
+      value: `${Math.ceil(state.labMeat)}/${state.labMeatMax}`,
+      alert: state.labMeat <= state.labMeatMax * 0.28,
+      width: 86,
+    },
+    { label: "COINS", value: String(state.coins), width: 82 },
   ];
-  ctx.font = "900 10px system-ui, sans-serif";
+  let metricX = 22;
   metrics.forEach((item, index) => {
-    const x = 14 + (index % 2) * 116;
-    const y = 55 + Math.floor(index / 2) * 14;
-    ctx.fillStyle =
-      item.startsWith("MEAT") && state.labMeat <= state.labMeatMax * 0.28
-        ? "#d58a8a"
-        : "#f8f9f7";
-    ctx.fillText(item, x, y);
+    drawMobileHeaderMetric(ctx, item, metricX, 48);
+    metricX += item.width + 6;
   });
 
   if (state.mode === "playing") {
@@ -574,16 +588,17 @@ function drawHeader(
       ? `${timeLeft}s`
       : "Ready";
   drawHeaderMetrics(ctx, [
-    { label: "Day", value: String(state.day) },
-    { label: "Time", value: status },
+    { label: "Day", value: `${state.day}/${FINAL_DAY_COUNT}`, width: 68 },
+    { label: "Time", value: status, width: 78 },
     {
       label: "Meat",
       value: `${Math.ceil(state.labMeat)}/${state.labMeatMax}`,
       alert: state.labMeat <= state.labMeatMax * 0.28,
+      width: 86,
     },
-    { label: "Coins", value: String(state.coins) },
-    { label: "Served", value: String(state.served) },
-    { label: "Missed", value: String(state.missed) },
+    { label: "Coins", value: String(state.coins), width: 74 },
+    { label: "Served", value: String(state.served), width: 76 },
+    { label: "Missed", value: String(state.missed), width: 76 },
   ]);
 
   if (state.mode === "playing") {
@@ -609,23 +624,83 @@ function drawHeaderLogo(
 
 function drawHeaderMetrics(
   ctx: CanvasRenderingContext2D,
-  metrics: Array<{ label: string; value: string; alert?: boolean }>,
+  metrics: HeaderMetric[],
 ): void {
   let x = 435;
-  const y = 40;
+  const y = 18;
 
   metrics.forEach((metric) => {
-    ctx.font = "900 12px system-ui, sans-serif";
-    ctx.fillStyle = "#d7dad9";
-    const label = metric.label.toUpperCase();
-    ctx.fillText(label, x, y);
-    x += ctx.measureText(label).width + 5;
-
-    ctx.font = "900 14px system-ui, sans-serif";
-    ctx.fillStyle = metric.alert ? "#d58a8a" : "#f8f9f7";
-    ctx.fillText(metric.value, x, y);
-    x += ctx.measureText(metric.value).width + 18;
+    drawHeaderMetricBox(ctx, metric, x, y, metric.width, 36);
+    x += metric.width + 8;
   });
+}
+
+function drawHeaderMetricBox(
+  ctx: CanvasRenderingContext2D,
+  metric: HeaderMetric,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  const border = metric.alert ? "#d58a8a" : "#d7dad9";
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  drawStatBoxCorners(ctx, x, y, w, h, border);
+
+  ctx.fillStyle = metric.alert ? "#d58a8a" : "#d7dad9";
+  ctx.font = "900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, metric.label.toUpperCase(), x + w / 2, y + 12);
+  ctx.fillStyle = metric.alert ? "#f1d4d4" : "#f8f9f7";
+  ctx.font = "900 13px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(ctx, metric.value.toUpperCase(), x + w / 2, y + 28);
+}
+
+function drawMobileHeaderMetric(
+  ctx: CanvasRenderingContext2D,
+  metric: HeaderMetric,
+  x: number,
+  y: number,
+): void {
+  const border = metric.alert ? "#d58a8a" : "#d7dad9";
+  ctx.fillStyle = "#252628";
+  ctx.fillRect(x, y, metric.width, 18);
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, metric.width, 18);
+  drawStatBoxCorners(ctx, x, y, metric.width, 18, border, 2);
+
+  ctx.fillStyle = metric.alert ? "#f1d4d4" : "#f8f9f7";
+  ctx.font = "900 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+  drawCenteredText(
+    ctx,
+    `${metric.label.toUpperCase()} ${metric.value.toUpperCase()}`,
+    x + metric.width / 2,
+    y + 12,
+  );
+}
+
+function drawStatBoxCorners(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+  size = 4,
+): void {
+  ctx.fillStyle = color;
+  ctx.fillRect(x - 1, y - 1, size, 2);
+  ctx.fillRect(x - 1, y - 1, 2, size);
+  ctx.fillRect(x + w - size + 1, y - 1, size, 2);
+  ctx.fillRect(x + w - 1, y - 1, 2, size);
+  ctx.fillRect(x - 1, y + h - 1, size, 2);
+  ctx.fillRect(x - 1, y + h - size + 1, 2, size);
+  ctx.fillRect(x + w - size + 1, y + h - 1, size, 2);
+  ctx.fillRect(x + w - 1, y + h - size + 1, 2, size);
 }
 
 function drawPauseButton(ctx: CanvasRenderingContext2D, paused: boolean): void {
@@ -651,7 +726,7 @@ function drawQueue(
   ctx.fillStyle = "#252628";
   ctx.font = "800 17px system-ui, sans-serif";
   ctx.fillText("Guest Check-In", 36, 112);
-  drawHotelEntranceSprite(ctx, houseSprite, 109, 122, 72);
+  drawHotelEntranceSprite(ctx, houseSprite, 82, 120, 126, 74);
 
   if (state.queue.length === 0) {
     ctx.fillStyle = "#696b6c";
@@ -705,7 +780,8 @@ function drawHotelEntranceSprite(
   houseSprite: HTMLImageElement | undefined,
   x: number,
   y: number,
-  size: number,
+  width: number,
+  height: number,
 ): void {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -719,27 +795,30 @@ function drawHotelEntranceSprite(
       houseSprite.naturalHeight,
       x,
       y,
-      size,
-      size,
+      width,
+      height,
     );
     ctx.restore();
     return;
   }
 
+  const size = Math.min(width, height);
+  const offsetX = x + Math.floor((width - size) / 2);
+  const offsetY = y + Math.floor((height - size) / 2);
   ctx.fillStyle = "#f8f9f7";
-  ctx.fillRect(x, y + 12, size, size - 12);
+  ctx.fillRect(offsetX, offsetY + 12, size, size - 12);
   ctx.fillStyle = "#48494b";
-  ctx.fillRect(x, y + 12, size, 4);
-  ctx.fillRect(x, y + size - 4, size, 4);
-  ctx.fillRect(x + 8, y + 20, 6, size - 24);
-  ctx.fillRect(x + size - 14, y + 20, 6, size - 24);
-  ctx.fillRect(x + 20, y + 4, size - 40, 8);
-  ctx.fillRect(x + 28, y, size - 56, 4);
-  ctx.fillRect(x + 22, y + 25, 28, size - 29);
+  ctx.fillRect(offsetX, offsetY + 12, size, 4);
+  ctx.fillRect(offsetX, offsetY + size - 4, size, 4);
+  ctx.fillRect(offsetX + 8, offsetY + 20, 6, size - 24);
+  ctx.fillRect(offsetX + size - 14, offsetY + 20, 6, size - 24);
+  ctx.fillRect(offsetX + 20, offsetY + 4, size - 40, 8);
+  ctx.fillRect(offsetX + 28, offsetY, size - 56, 4);
+  ctx.fillRect(offsetX + 22, offsetY + 25, 28, size - 29);
   ctx.fillStyle = "#e3e5e4";
-  ctx.fillRect(x + 29, y + 31, 14, size - 35);
+  ctx.fillRect(offsetX + 29, offsetY + 31, 14, size - 35);
   ctx.fillStyle = "#252628";
-  ctx.fillRect(x + 41, y + 44, 4, 4);
+  ctx.fillRect(offsetX + 41, offsetY + 44, 4, 4);
   ctx.restore();
 }
 
@@ -944,7 +1023,6 @@ function drawFooter(
   ctx.strokeStyle = "rgba(248, 249, 247, 0.18)";
   ctx.strokeRect(rect.x + 8, rect.y + 8, rect.w - 16, rect.h - 16);
 
-  drawLedgerScanlines(ctx, rect.x + 10, rect.y + 10, rect.w - 20, rect.h - 20, renderTime);
   drawOpenBookSprite(ctx, 322, 493, 48);
 
   ctx.fillStyle = "#f8f9f7";
@@ -979,24 +1057,6 @@ function drawFooter(
   ctx.fillStyle = "#252628";
   ctx.font = "700 12px system-ui, sans-serif";
   ctx.fillText("Click guests, then stations. Press F for fullscreen.", 36, 626);
-}
-
-function drawLedgerScanlines(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  renderTime: number,
-): void {
-  ctx.save();
-  ctx.globalAlpha = 0.18;
-  ctx.fillStyle = "#f8f9f7";
-  const offset = Math.floor(renderTime * 10) % 8;
-  for (let lineY = y + offset; lineY < y + h; lineY += 8) {
-    ctx.fillRect(x, lineY, w, 1);
-  }
-  ctx.restore();
 }
 
 function getTypedLedgerLine(line: string, lineAge: number): string {
@@ -1169,35 +1229,36 @@ function drawShortageWarningOverlay(
     25,
   );
 
+  const rect = SHORTAGE_OVERLAY_BUTTON_RECT;
   ctx.fillStyle = "#111214";
   ctx.fillRect(
-    OVERLAY_BUTTON_RECT.x - 4,
-    OVERLAY_BUTTON_RECT.y + 4,
-    OVERLAY_BUTTON_RECT.w + 8,
-    OVERLAY_BUTTON_RECT.h,
+    rect.x - 4,
+    rect.y + 4,
+    rect.w + 8,
+    rect.h,
   );
-  ctx.fillStyle = "#252628";
+  ctx.fillStyle = "#8f1d1d";
   ctx.fillRect(
-    OVERLAY_BUTTON_RECT.x,
-    OVERLAY_BUTTON_RECT.y,
-    OVERLAY_BUTTON_RECT.w,
-    OVERLAY_BUTTON_RECT.h,
+    rect.x,
+    rect.y,
+    rect.w,
+    rect.h,
   );
   ctx.strokeStyle = "#f8f9f7";
   ctx.lineWidth = 2;
   ctx.strokeRect(
-    OVERLAY_BUTTON_RECT.x + 7,
-    OVERLAY_BUTTON_RECT.y + 7,
-    OVERLAY_BUTTON_RECT.w - 14,
-    OVERLAY_BUTTON_RECT.h - 14,
+    rect.x + 7,
+    rect.y + 7,
+    rect.w - 14,
+    rect.h - 14,
   );
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 17px system-ui, sans-serif";
   drawCenteredText(
     ctx,
     "OK",
-    OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
-    OVERLAY_BUTTON_RECT.y + 28,
+    rect.x + rect.w / 2,
+    rect.y + 28,
   );
 }
 
