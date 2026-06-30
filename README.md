@@ -16,9 +16,7 @@ You run a seaside hotel where every weary Normie visitor deserves prompt hospita
 
 ## In Progress
 
-| Desktop | Mobile |
-| --- | --- |
-| ![Desktop in-progress gameplay](docs/screenshots/desktop-in-progress.png) | ![Mobile in-progress gameplay](docs/screenshots/mobile-in-progress.png) |
+![Desktop in-progress gameplay](docs/screenshots/desktop-in-progress.png)
 
 ## Gameplay
 

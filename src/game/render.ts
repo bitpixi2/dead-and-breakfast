@@ -21,6 +21,7 @@ import {
 import {
   canStartNextDayFromDayEnd,
   getEffectiveStationCapacity,
+  getLabMeatClickGain,
   hasAffordableUpgrade,
 } from "./engine";
 import { getGuestRule, STATIONS } from "./rules";
@@ -337,7 +338,12 @@ function drawMobileLabMeatClicker(
   ctx.fillRect(rect.x + 8, rect.y + 78, rect.w - 16, 26);
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 12px system-ui, sans-serif";
-  drawCenteredText(ctx, "CLICK +2", rect.x + rect.w / 2, rect.y + 96);
+  drawCenteredText(
+    ctx,
+    `CLICK +${getLabMeatClickGain(state.day)}`,
+    rect.x + rect.w / 2,
+    rect.y + 96,
+  );
   ctx.fillStyle = isOut ? accent : "#696b6c";
   ctx.font = "800 9px system-ui, sans-serif";
   drawClippedText(
@@ -896,7 +902,12 @@ function drawLabMeatClicker(
   ctx.fillRect(rect.x + 14, rect.y + 116, rect.w - 28, 22);
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 12px system-ui, sans-serif";
-  drawCenteredText(ctx, "CLICK +2", rect.x + rect.w / 2, rect.y + 132);
+  drawCenteredText(
+    ctx,
+    `CLICK +${getLabMeatClickGain(state.day)}`,
+    rect.x + rect.w / 2,
+    rect.y + 132,
+  );
 }
 
 function drawLabMeatFlash(

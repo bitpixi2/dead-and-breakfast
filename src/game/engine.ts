@@ -687,7 +687,7 @@ export function getDayDifficulty(day: number): DayDifficulty {
       minSpawnSeconds: 2.45,
       patienceMultiplier: 0.8,
       serviceMultiplier: 0.86,
-      labDrainMultiplier: 1.72,
+      labDrainMultiplier: 3.35,
     };
   }
 
@@ -697,7 +697,7 @@ export function getDayDifficulty(day: number): DayDifficulty {
       minSpawnSeconds: 2.25,
       patienceMultiplier: 0.74,
       serviceMultiplier: 0.82,
-      labDrainMultiplier: 2.05,
+      labDrainMultiplier: 4.65,
     };
   }
 

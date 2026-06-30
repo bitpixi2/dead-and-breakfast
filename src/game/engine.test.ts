@@ -255,15 +255,24 @@ describe("game engine", () => {
   });
 
   it("makes day 6 and 7 harder on the lab-grown meat clicker", () => {
-    expect(getDayDifficulty(6).labDrainMultiplier).toBeGreaterThan(
-      getDayDifficulty(5).labDrainMultiplier,
-    );
-    expect(getDayDifficulty(7).labDrainMultiplier).toBeGreaterThan(
-      getDayDifficulty(6).labDrainMultiplier,
-    );
+    const day5Drain = getDayDifficulty(5).labDrainMultiplier;
+    const day6Drain = getDayDifficulty(6).labDrainMultiplier;
+    const day7Drain = getDayDifficulty(7).labDrainMultiplier;
+
+    expect(day6Drain).toBeGreaterThan(day5Drain * 2);
+    expect(day7Drain).toBeGreaterThan(day6Drain);
     expect(getLabMeatClickGain(5)).toBe(2);
     expect(getLabMeatClickGain(6)).toBe(1);
     expect(getLabMeatClickGain(7)).toBe(1);
+
+    const base = {
+      ...startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave())),
+      labMeat: 10,
+      spawnTimer: 99,
+    };
+    const daySevenAfter = advanceGame({ ...base, day: 7 }, 4000);
+
+    expect(daySevenAfter.labMeat).toBeLessThanOrEqual(6);
   });
 
   it("congratulates the player after surviving day 7", () => {
