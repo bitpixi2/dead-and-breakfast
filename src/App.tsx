@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import upgradeIconsUrl from "./assets/upgrade-icons-monochrome.png";
 import { CanvasStage } from "./CanvasStage";
+import { WinnerClaim } from "./components/WinnerClaim";
 import {
   addGuestToRoster,
   advanceGame,
@@ -18,11 +19,12 @@ import {
 import { getUpgradeCost, UPGRADE_DEFS } from "./game/rules";
 import {
   fetchNormieGuest,
+  logGameCompletion,
   loadStarterRoster,
   logNormieEntry,
-} from "./normiesApi";
-import { getVisibleGuestbookEntries } from "./guestbook";
-import { loadGameSave, saveFromGameState, writeGameSave } from "./save";
+} from "./api/normiesApi";
+import { getVisibleGuestbookEntries } from "./content/guestbook";
+import { loadGameSave, saveFromGameState, writeGameSave } from "./storage/save";
 import type { CanvasStats, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
 
@@ -56,6 +58,8 @@ export default function App() {
   const dayEndHasAffordableUpgrade =
     game.mode === "dayEnd" && hasAffordableUpgrade(game);
   const guestbookEntries = getVisibleGuestbookEntries(game, stats);
+  const showWinnerClaim =
+    game.mode === "gameOver" && game.gameOverKind === "won";
 
   useEffect(() => {
     let cancelled = false;
@@ -184,6 +188,19 @@ export default function App() {
               setGame((current) => handleCanvasClick(current, x, y))
             }
           />
+          {showWinnerClaim && (
+            <WinnerClaim
+              onSubmit={async (walletAddress) => {
+                await logGameCompletion({
+                  walletAddress,
+                  score: game.score,
+                  coins: game.coins,
+                  served: game.served,
+                  missed: game.missed,
+                });
+              }}
+            />
+          )}
         </section>
 
         <aside
@@ -354,6 +371,11 @@ export default function App() {
                   When a Normie token ID is entered, Dead and Breakfast logs the
                   token ID, current owner wallet, public Normie metadata, and
                   timestamp for reward and admin reference.
+                </p>
+                <p>
+                  If you survive all seven game-days, you may optionally enter a
+                  wallet address for completion rewards. That wallet is logged
+                  separately from Normie owner snapshots.
                 </p>
                 <p>
                   Game progress and cached Normie guest data may be stored in

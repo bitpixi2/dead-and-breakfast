@@ -52,7 +52,7 @@ export function createGameState(
   return {
     mode: "menu",
     paused: false,
-    day: save.day,
+    day: 1,
     dayTime: 0,
     dayDuration: 86,
     spawnTimer: 0,

@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   fetchNormieGuest,
+  logGameCompletion,
   logNormieEntry,
   mergeRoster,
   normalizeNormieMetadata,
 } from "./normiesApi";
-import { FALLBACK_GUESTS } from "./data/demoGuests";
+import { FALLBACK_GUESTS } from "../data/demoGuests";
 
 describe("Normies API normalization", () => {
   it("uses metadata Type so Zombie Canvas state is visible", () => {
@@ -101,6 +102,39 @@ describe("Normies API normalization", () => {
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ tokenId: 2613 }),
+      }),
+    );
+  });
+
+  it("logs 7-day completion wallet claims through the backend endpoint", async () => {
+    const fetcher = vi.fn(async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          ok: true,
+          walletAddress: "0xb7d3a787a39f25457ca511dc3f0591b546f5e02f",
+          completedAt: "2026-07-01T00:00:00.000Z",
+        }),
+      } as Response;
+    });
+    const payload = {
+      walletAddress: "0xB7D3A787A39F25457CA511DC3F0591B546F5E02F",
+      score: 1200,
+      coins: 44,
+      served: 15,
+      missed: 2,
+    };
+
+    const result = await logGameCompletion(payload, { fetcher });
+
+    expect(result.walletAddress).toBe(
+      "0xb7d3a787a39f25457ca511dc3f0591b546f5e02f",
+    );
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/game-completion",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify(payload),
       }),
     );
   });

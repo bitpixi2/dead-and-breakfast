@@ -1,15 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_GUESTS } from "./data/demoGuests";
+import { FALLBACK_GUESTS } from "../data/demoGuests";
 import {
   buildGuestbookEntries,
   getCompletedGuestbookDays,
   getVisibleGuestbookEntries,
 } from "./guestbook";
-import { createGameState } from "./game/engine";
-import { createDefaultSave } from "./save";
-import type { CanvasStats } from "./types";
+import { createGameState } from "../game/engine";
+import { createDefaultSave } from "../storage/save";
+import type { CanvasStats } from "../types";
 
 describe("guestbook", () => {
+  it("stays hidden on the menu even when a later day is saved", () => {
+    const state = {
+      ...createGameState(FALLBACK_GUESTS, { ...createDefaultSave(), day: 7 }),
+      mode: "menu" as const,
+      day: 7,
+    };
+
+    expect(getCompletedGuestbookDays(state)).toBe(0);
+    expect(getVisibleGuestbookEntries(state, null)).toHaveLength(0);
+  });
+
   it("reveals no entries during day 1 play", () => {
     const state = {
       ...createGameState(FALLBACK_GUESTS, createDefaultSave()),

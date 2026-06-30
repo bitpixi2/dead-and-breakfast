@@ -1,5 +1,5 @@
-import type { GameSaveV1, GameState, UpgradeLevels } from "./types";
-import { createDefaultUpgrades } from "./game/rules";
+import type { GameSaveV1, GameState, UpgradeLevels } from "../types";
+import { createDefaultUpgrades } from "../game/rules";
 
 const SAVE_KEY = "dead-and-breakfast:save:v1";
 

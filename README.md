@@ -8,12 +8,12 @@ You run a seaside hotel where every weary Normie visitor deserves prompt hospita
 
 ## Highlights
 
-- Normies didn't want to connect wallets to hackathon sites, so we took a unique approach.
-- Normies token metadata and images are served from `api.normies.art`, also with manual entries that store that owner to send on-chain rewards.
-- Uses Normies Type traits as rules: Human, Zombie, Cat, Alien, and Agent each route differently.
-- Includes a complete 7 game days with patience timers, service stations, coins, misses, upgrades, and local save persistence.
-- The in-game Guestbook turns Normies API facts into playful lore, revealing one signed entry after each completed day.
-- Monochrome art direction to match Normies.
+- Walletless by design: no wallet connect is required to play, while entered Normie IDs still log the current owner snapshot for rewards.
+- Deep Normies API use: live metadata, Type traits, token images, owner lookups, Canvas stats, and fallback guests all shape the game loop.
+- Type-driven gameplay: Humans, Zombies, Cats, Aliens, and Agents each have matching rooms, service rules, bonuses, and penalties.
+- Complete 7-day arcade loop: patience timers, lab-grown meat pressure, wrong-room misses, coins, upgrades, local saves, and an optional winner wallet claim.
+- Guestbook lore promotes Normies facts without extra API polling, revealing one signed entry after each survived day.
+- Monochrome pixel art, horror-comedy theming, and low-friction browser play match the Normies on-chain bitmap spirit.
 
 ## Guestbook
 
@@ -61,6 +61,11 @@ flowchart TD
   B --> H["Cloudflare Pages Function"]
   H --> I["Cloudflare D1 Normie entry log"]
   I --> J["Owner snapshot for walletless rewards"]
+  H --> K["Cloudflare D1 game completion log"]
+  K --> L["Optional winner wallet claim"]
+
+  classDef default fill:#f8f9f7,color:#252628,stroke:#252628,stroke-width:1.5px;
+  linkStyle default stroke:#48494b,stroke-width:1.5px;
 ```
 
 ## User Flow
@@ -70,20 +75,33 @@ flowchart TD
   A["Open Dead and Breakfast"] --> B["Start 7-day B&B run"]
   B --> C["Guests arrive from Normies roster"]
   C --> D["Click guest"]
-  D --> E["Send to matching room"]
-  E --> F["Click lab-grown meat supply"]
-  F --> G["Earn coins or miss guests"]
-  G --> H["Choose upgrade at day end"]
-  H --> I["Guestbook unlocks one Normies fact"]
-  I --> J{"7 days survived?"}
-  J -->|No| B
-  J -->|Yes| K["Rewards go to entered Normie owner wallet"]
+  D --> E{"Matching room?"}
+  E -->|Yes| F["Serve guest and earn coins"]
+  E -->|No| W1["Wrong room: guest leaves unhappy and Missed increases"]
+  F --> G["Click lab-grown meat supply"]
+  G --> H{"Meat supply above zero?"}
+  H -->|Yes| I["Finish the day"]
+  H -->|No| W2["Meat shortage warning: Humans must be in Human Safe Suite"]
+  W2 --> J{"Human out of room?"}
+  J -->|Yes| W3["Game Over"]
+  J -->|No| I
+  W1 --> I
+  I --> K["Choose upgrade at day end"]
+  K --> L["Guestbook unlocks one Normies fact"]
+  L --> M{"7 days survived?"}
+  M -->|No| B
+  M -->|Yes| N["Optional wallet claim + owner snapshot rewards"]
+
+  classDef default fill:#f8f9f7,color:#252628,stroke:#252628,stroke-width:1.5px;
+  classDef warning fill:#48494b,color:#f8f9f7,stroke:#252628,stroke-width:2px;
+  class W1,W2,W3 warning;
+  linkStyle default stroke:#48494b,stroke-width:1.5px;
 ```
 
 ## Tech Stack
 
 - React 19 + TypeScript + Vite
-- Codex (Melbourne ambassador)
+- Codex-assisted build
 - Canvas-rendered game stage
 - Normies API client
 - LocalStorage save system

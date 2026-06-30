@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseGameSave } from "./save";
-import { createDefaultUpgrades } from "./game/rules";
+import { createDefaultUpgrades } from "../game/rules";
 
 describe("save parsing", () => {
   it("falls back safely on corrupt save data", () => {

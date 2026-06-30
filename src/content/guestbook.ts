@@ -1,4 +1,4 @@
-import type { CanvasStats, GameState } from "./types";
+import type { CanvasStats, GameState } from "../types";
 
 const FINAL_GUESTBOOK_DAY = 7;
 
@@ -32,6 +32,10 @@ function clampCompletedDays(days: number): number {
 }
 
 export function getCompletedGuestbookDays(state: GameState): number {
+  if (state.mode === "menu") {
+    return 0;
+  }
+
   if (state.mode === "gameOver" && state.gameOverKind === "won") {
     return FINAL_GUESTBOOK_DAY;
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_GUESTS } from "../data/demoGuests";
-import { createDefaultSave } from "../save";
+import { createDefaultSave } from "../storage/save";
 import { SHORTAGE_OVERLAY_BUTTON_RECT, WIN_OVERLAY_BUTTON_RECT } from "./layout";
 import {
   advanceGame,
@@ -21,6 +21,18 @@ describe("game engine", () => {
     x: SHORTAGE_OVERLAY_BUTTON_RECT.x + SHORTAGE_OVERLAY_BUTTON_RECT.w / 2,
     y: SHORTAGE_OVERLAY_BUTTON_RECT.y + SHORTAGE_OVERLAY_BUTTON_RECT.h / 2,
   };
+
+  it("starts the menu on day 1 even when an old save has a later day", () => {
+    const state = createGameState(FALLBACK_GUESTS, {
+      ...createDefaultSave(),
+      day: 7,
+    });
+    const started = startNextDay(state);
+
+    expect(state.mode).toBe("menu");
+    expect(state.day).toBe(1);
+    expect(started.day).toBe(1);
+  });
 
   it("starts a day and exposes deterministic text state", () => {
     const state = startNextDay(createGameState(FALLBACK_GUESTS, createDefaultSave()));

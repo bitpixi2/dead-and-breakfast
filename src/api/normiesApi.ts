@@ -1,6 +1,6 @@
-import { FALLBACK_GUESTS, VERIFIED_SEED_IDS } from "./data/demoGuests";
-import { normalizeNormieType } from "./game/rules";
-import type { CanvasStats, NormieGuest, NormieTrait } from "./types";
+import { FALLBACK_GUESTS, VERIFIED_SEED_IDS } from "../data/demoGuests";
+import { normalizeNormieType } from "../game/rules";
+import type { CanvasStats, NormieGuest, NormieTrait } from "../types";
 
 const API_BASE = "https://api.normies.art";
 const GUEST_CACHE_PREFIX = "dead-and-breakfast:normie:";
@@ -31,6 +31,20 @@ export interface NormieEntryLogResult {
   owner: string | null;
   type: string;
   enteredAt: string;
+}
+
+export interface GameCompletionPayload {
+  walletAddress: string;
+  score: number;
+  coins: number;
+  served: number;
+  missed: number;
+}
+
+export interface GameCompletionLogResult {
+  ok: boolean;
+  walletAddress: string;
+  completedAt: string;
 }
 
 export interface NormiesClientOptions {
@@ -188,6 +202,24 @@ export async function logNormieEntry(
   }
 
   return (await response.json()) as NormieEntryLogResult;
+}
+
+export async function logGameCompletion(
+  payload: GameCompletionPayload,
+  options: Pick<NormiesClientOptions, "fetcher"> = {},
+): Promise<GameCompletionLogResult> {
+  const fetcher = options.fetcher ?? fetch;
+  const response = await fetcher("/api/game-completion", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Completion log returned ${response.status}`);
+  }
+
+  return (await response.json()) as GameCompletionLogResult;
 }
 
 export async function fetchCanvasStats(
