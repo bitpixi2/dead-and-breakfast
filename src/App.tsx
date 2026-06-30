@@ -307,11 +307,11 @@ export default function App() {
         </button>{" "}
         |{" "}
         <a
-          href="https://github.com/bitpixi2/normies-button"
+          href="https://github.com/bitpixi2/dead-and-breakfast"
           target="_blank"
           rel="noreferrer"
         >
-          GitHub
+          GitHub Repo
         </a>{" "}
         |{" "}
         <a href="https://x.com/bitpixi" target="_blank" rel="noreferrer">

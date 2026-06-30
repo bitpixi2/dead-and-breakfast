@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_GUESTS } from "../data/demoGuests";
 import { createDefaultSave } from "../save";
-import { SHORTAGE_OVERLAY_BUTTON_RECT } from "./layout";
+import { SHORTAGE_OVERLAY_BUTTON_RECT, WIN_OVERLAY_BUTTON_RECT } from "./layout";
 import {
   advanceGame,
   buyUpgrade,
@@ -302,5 +302,22 @@ describe("game engine", () => {
     expect(won.gameOverKind).toBe("won");
     expect(won.gameOverReason).toContain("7 game-days");
     expect(text.gameOverKind).toBe("won");
+  });
+
+  it("restarts from the won overlay button", () => {
+    const won = {
+      ...createGameState(FALLBACK_GUESTS, createDefaultSave()),
+      mode: "gameOver" as const,
+      gameOverKind: "won" as const,
+      day: 7,
+    };
+    const restarted = handleCanvasClick(
+      won,
+      WIN_OVERLAY_BUTTON_RECT.x + WIN_OVERLAY_BUTTON_RECT.w / 2,
+      WIN_OVERLAY_BUTTON_RECT.y + WIN_OVERLAY_BUTTON_RECT.h / 2,
+    );
+
+    expect(restarted.mode).toBe("menu");
+    expect(restarted.gameOverKind).toBeNull();
   });
 });

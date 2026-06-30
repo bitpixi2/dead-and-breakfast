@@ -23,6 +23,7 @@ import {
   OVERLAY_BUTTON_RECT,
   rectContains,
   SHORTAGE_OVERLAY_BUTTON_RECT,
+  WIN_OVERLAY_BUTTON_RECT,
 } from "./layout";
 
 const MAX_LOG_LINES = 6;
@@ -349,7 +350,9 @@ export function handleCanvasClick(
   }
 
   if (state.mode === "gameOver") {
-    return rectContains(OVERLAY_BUTTON_RECT, x, y) ? restartGame(state) : state;
+    const buttonRect =
+      state.gameOverKind === "won" ? WIN_OVERLAY_BUTTON_RECT : OVERLAY_BUTTON_RECT;
+    return rectContains(buttonRect, x, y) ? restartGame(state) : state;
   }
 
   if (state.mode !== "playing") {

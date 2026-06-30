@@ -13,6 +13,7 @@ import headerLogoDarkUrl from "./assets/dead-breakfast-header-logo-dark.png";
 import headerLogoUrl from "./assets/dead-breakfast-header-logo.png";
 import houseSpriteUrl from "./assets/house-sprite-monochrome.png";
 import roomIconsUrl from "./assets/room-icons-monochrome.png";
+import winPrincessButlerUrl from "./assets/win-princess-butler.png";
 import zombieKeyWarningUrl from "./assets/zombie-key-warning.png";
 
 interface CanvasStageProps {
@@ -54,6 +55,7 @@ export function CanvasStage({
         headerLogoUrl,
         houseSpriteUrl,
         roomIconsUrl,
+        winPrincessButlerUrl,
         zombieKeyWarningUrl,
       ]),
     );
@@ -147,6 +149,7 @@ export function CanvasStage({
       imagesRef.current.get(headerLogoDarkUrl),
       imagesRef.current.get(houseSpriteUrl),
       imagesRef.current.get(zombieKeyWarningUrl),
+      imagesRef.current.get(winPrincessButlerUrl),
       timeMs / 1000,
       Math.max(0, (timeMs - ledgerLineStartedAtRef.current) / 1000),
     );

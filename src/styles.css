@@ -332,33 +332,33 @@ h2 {
 
 .guestbook-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .guestbook-entry {
-  min-height: 118px;
+  min-height: 138px;
   border: 2px solid rgba(72, 73, 75, 0.18);
   background:
     linear-gradient(rgba(72, 73, 75, 0.07) 1px, transparent 1px),
     #fff;
   background-size: 100% 18px;
-  padding: 10px;
+  padding: 9px;
 }
 
 .guestbook-entry p {
   margin: 0;
-  font-size: 0.86rem;
-  font-weight: 760;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.32;
 }
 
 .guestbook-entry footer {
   margin-top: 8px;
   color: var(--pixel);
   font-family: "GeistMono", "Courier New", monospace;
-  font-size: 0.75rem;
-  font-weight: 900;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-align: right;
 }
 

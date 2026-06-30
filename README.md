@@ -48,6 +48,38 @@ The game uses already-loaded Canvas stats when available and falls back to a ver
 - Fetches Canvas history stats when available and reuses them for Guestbook lore.
 - Caches API responses locally and preserves a tested fallback path.
 
+## Technical Architecture
+
+```mermaid
+flowchart TD
+  A["Player Browser"] --> B["React + TypeScript App"]
+  B --> C["Canvas Game Engine"]
+  C --> D["Guest Type Rules + Upgrades"]
+  B --> E["Normies API Client"]
+  E --> F["api.normies.art metadata, images, owners, Canvas stats"]
+  B --> G["localStorage save + API cache"]
+  B --> H["Cloudflare Pages Function"]
+  H --> I["Cloudflare D1 Normie entry log"]
+  I --> J["Owner snapshot for walletless rewards"]
+```
+
+## User Flow
+
+```mermaid
+flowchart TD
+  A["Open Dead and Breakfast"] --> B["Start 7-day B&B run"]
+  B --> C["Guests arrive from Normies roster"]
+  C --> D["Click guest"]
+  D --> E["Send to matching room"]
+  E --> F["Click lab-grown meat supply"]
+  F --> G["Earn coins or miss guests"]
+  G --> H["Choose upgrade at day end"]
+  H --> I["Guestbook unlocks one Normies fact"]
+  I --> J{"7 days survived?"}
+  J -->|No| B
+  J -->|Yes| K["Rewards go to entered Normie owner wallet"]
+```
+
 ## Tech Stack
 
 - React 19 + TypeScript + Vite

@@ -10,10 +10,12 @@ import {
   MOBILE_OVERLAY_BUTTON_RECT,
   MOBILE_PAUSE_BUTTON_RECT,
   MOBILE_SHORTAGE_OVERLAY_BUTTON_RECT,
+  MOBILE_WIN_OVERLAY_BUTTON_RECT,
   MOBILE_STATION_RECTS,
   OVERLAY_BUTTON_RECT,
   PAUSE_BUTTON_RECT,
   SHORTAGE_OVERLAY_BUTTON_RECT,
+  WIN_OVERLAY_BUTTON_RECT,
   mobileQueueRectForIndex,
   queueRectForIndex,
   STATION_GUTTER,
@@ -48,6 +50,7 @@ export function drawGame(
   overlayLogo?: HTMLImageElement,
   houseSprites?: HTMLImageElement,
   warningPortrait?: HTMLImageElement,
+  winPortrait?: HTMLImageElement,
   renderTime = 0,
   ledgerLineAge = 999,
 ): void {
@@ -66,7 +69,7 @@ export function drawGame(
   if (state.mode === "shortageWarning") {
     drawShortageWarningOverlay(ctx, warningPortrait);
   } else if (state.mode === "gameOver") {
-    drawGameOverOverlay(ctx, state, renderTime);
+    drawGameOverOverlay(ctx, state, renderTime, winPortrait);
   } else if (state.mode === "menu") {
     drawOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
@@ -90,6 +93,7 @@ export function drawMobileGame(
   overlayLogo?: HTMLImageElement,
   _houseSprites?: HTMLImageElement,
   warningPortrait?: HTMLImageElement,
+  winPortrait?: HTMLImageElement,
   renderTime = 0,
   ledgerLineAge = 999,
 ): void {
@@ -108,7 +112,7 @@ export function drawMobileGame(
   if (state.mode === "shortageWarning") {
     drawMobileShortageWarningOverlay(ctx, warningPortrait);
   } else if (state.mode === "gameOver") {
-    drawMobileGameOverOverlay(ctx, state, renderTime);
+    drawMobileGameOverOverlay(ctx, state, renderTime, winPortrait);
   } else if (state.mode === "menu") {
     drawMobileOverlay(ctx, "Dead and Breakfast", "Start day", overlayLogo);
   } else if (state.mode === "dayEnd") {
@@ -490,6 +494,7 @@ function drawMobileGameOverOverlay(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   renderTime: number,
+  winPortrait?: HTMLImageElement,
 ): void {
   const won = state.gameOverKind === "won";
   if (won) {
@@ -499,30 +504,41 @@ function drawMobileGameOverOverlay(
   ctx.fillStyle = "rgba(37, 38, 40, 0.74)";
   ctx.fillRect(0, 72, MOBILE_CANVAS_WIDTH, MOBILE_CANVAS_HEIGHT - 72);
   ctx.fillStyle = "#f8f9f7";
-  ctx.fillRect(26, 218, 338, won ? 258 : 222);
+  ctx.fillRect(26, won ? 188 : 218, 338, won ? 344 : 222);
   ctx.strokeStyle = won ? "#f8f9f7" : "#252628";
   ctx.lineWidth = 4;
-  ctx.strokeRect(26, 218, 338, won ? 258 : 222);
+  ctx.strokeRect(26, won ? 188 : 218, 338, won ? 344 : 222);
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 2;
-  ctx.strokeRect(36, 228, 318, won ? 238 : 202);
+  ctx.strokeRect(36, won ? 198 : 228, 318, won ? 324 : 202);
 
   ctx.fillStyle = "#252628";
   ctx.font = "900 25px ui-monospace, SFMono-Regular, Menlo, monospace";
-  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 195, 268);
-  ctx.font = "800 14px system-ui, sans-serif";
-  wrapText(
-    ctx,
-    won
-      ? "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered."
-      : (state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe."),
-    58,
-    304,
-    274,
-    19,
-  );
+  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 195, won ? 236 : 268);
+  if (won) {
+    drawWinPortrait(ctx, winPortrait, 42, 266, 96, 118);
+    ctx.font = "800 13px system-ui, sans-serif";
+    wrapText(
+      ctx,
+      "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered.",
+      148,
+      280,
+      186,
+      18,
+    );
+  } else {
+    ctx.font = "800 14px system-ui, sans-serif";
+    wrapText(
+      ctx,
+      state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe.",
+      58,
+      304,
+      274,
+      19,
+    );
+  }
 
-  const rect = MOBILE_OVERLAY_BUTTON_RECT;
+  const rect = won ? MOBILE_WIN_OVERLAY_BUTTON_RECT : MOBILE_OVERLAY_BUTTON_RECT;
   const buttonY = rect.y;
   ctx.fillStyle = "#111214";
   ctx.fillRect(rect.x - 4, buttonY + 4, rect.w + 8, rect.h);
@@ -1266,6 +1282,7 @@ function drawGameOverOverlay(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   renderTime: number,
+  winPortrait?: HTMLImageElement,
 ): void {
   const won = state.gameOverKind === "won";
   if (won) {
@@ -1275,55 +1292,89 @@ function drawGameOverOverlay(
   ctx.fillStyle = "rgba(37, 38, 40, 0.72)";
   ctx.fillRect(0, 70, CANVAS_WIDTH, CANVAS_HEIGHT - 70);
   ctx.fillStyle = "#f8f9f7";
-  ctx.fillRect(310, 186, 480, won ? 278 : 230);
+  ctx.fillRect(won ? 270 : 310, won ? 156 : 186, won ? 560 : 480, won ? 340 : 230);
   ctx.strokeStyle = won ? "#f8f9f7" : "#252628";
   ctx.lineWidth = 4;
-  ctx.strokeRect(310, 186, 480, won ? 278 : 230);
+  ctx.strokeRect(won ? 270 : 310, won ? 156 : 186, won ? 560 : 480, won ? 340 : 230);
   ctx.strokeStyle = "#252628";
   ctx.lineWidth = 2;
-  ctx.strokeRect(322, 198, 456, won ? 254 : 206);
+  ctx.strokeRect(won ? 282 : 322, won ? 168 : 198, won ? 536 : 456, won ? 316 : 206);
 
   ctx.fillStyle = "#252628";
   ctx.font = "900 34px ui-monospace, SFMono-Regular, Menlo, monospace";
-  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 550, 252);
-  ctx.font = "800 18px system-ui, sans-serif";
-  wrapText(
-    ctx,
-    won
-      ? "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered."
-      : (state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe."),
-    382,
-    304,
-    336,
-    25,
-  );
+  drawCenteredText(ctx, won ? "7 DAYS SURVIVED" : "GAME OVER", 550, won ? 224 : 252);
+  if (won) {
+    drawWinPortrait(ctx, winPortrait, 322, 262, 132, 162);
+    ctx.font = "800 17px system-ui, sans-serif";
+    wrapText(
+      ctx,
+      "You are a great D&B keeper. Rewards will go to the owner wallet of whichever Normie # you entered.",
+      486,
+      286,
+      270,
+      24,
+    );
+  } else {
+    ctx.font = "800 18px system-ui, sans-serif";
+    wrapText(
+      ctx,
+      state.gameOverReason ?? "Dead and Breakfast could not keep the Humans safe.",
+      382,
+      304,
+      336,
+      25,
+    );
+  }
 
-  const buttonY = OVERLAY_BUTTON_RECT.y;
+  const buttonRect = won ? WIN_OVERLAY_BUTTON_RECT : OVERLAY_BUTTON_RECT;
+  const buttonY = buttonRect.y;
   ctx.fillStyle = "#111214";
   ctx.fillRect(
-    OVERLAY_BUTTON_RECT.x - 4,
+    buttonRect.x - 4,
     buttonY + 4,
-    OVERLAY_BUTTON_RECT.w + 8,
-    OVERLAY_BUTTON_RECT.h,
+    buttonRect.w + 8,
+    buttonRect.h,
   );
   ctx.fillStyle = "#252628";
-  ctx.fillRect(OVERLAY_BUTTON_RECT.x, buttonY, OVERLAY_BUTTON_RECT.w, OVERLAY_BUTTON_RECT.h);
+  ctx.fillRect(buttonRect.x, buttonY, buttonRect.w, buttonRect.h);
   ctx.strokeStyle = "#f8f9f7";
   ctx.lineWidth = 2;
   ctx.strokeRect(
-    OVERLAY_BUTTON_RECT.x + 7,
+    buttonRect.x + 7,
     buttonY + 7,
-    OVERLAY_BUTTON_RECT.w - 14,
-    OVERLAY_BUTTON_RECT.h - 14,
+    buttonRect.w - 14,
+    buttonRect.h - 14,
   );
   ctx.fillStyle = "#f8f9f7";
   ctx.font = "900 17px system-ui, sans-serif";
   drawCenteredText(
     ctx,
     won ? "Play again" : "Restart game",
-    OVERLAY_BUTTON_RECT.x + OVERLAY_BUTTON_RECT.w / 2,
+    buttonRect.x + buttonRect.w / 2,
     buttonY + 28,
   );
+}
+
+function drawWinPortrait(
+  ctx: CanvasRenderingContext2D,
+  winPortrait: HTMLImageElement | undefined,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): void {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if (winPortrait?.complete && winPortrait.naturalWidth > 0) {
+    ctx.drawImage(winPortrait, x, y, w, h);
+  } else {
+    ctx.fillStyle = "#e3e5e4";
+    ctx.fillRect(x + w * 0.24, y + h * 0.08, w * 0.52, h * 0.8);
+    ctx.fillStyle = "#48494b";
+    ctx.fillRect(x + w * 0.34, y + h * 0.18, w * 0.32, h * 0.16);
+    ctx.fillRect(x + w * 0.28, y + h * 0.36, w * 0.44, h * 0.46);
+  }
+  ctx.restore();
 }
 
 function drawWarningPortrait(
