@@ -21,6 +21,7 @@ import {
   loadStarterRoster,
   logNormieEntry,
 } from "./normiesApi";
+import { getVisibleGuestbookEntries } from "./guestbook";
 import { loadGameSave, saveFromGameState, writeGameSave } from "./save";
 import type { CanvasStats, GameState, UpgradeLevels } from "./types";
 import "./styles.css";
@@ -54,6 +55,7 @@ export default function App() {
     game.mode === "dayEnd" && !canStartNextDayFromDayEnd(game);
   const dayEndHasAffordableUpgrade =
     game.mode === "dayEnd" && hasAffordableUpgrade(game);
+  const guestbookEntries = getVisibleGuestbookEntries(game, stats);
 
   useEffect(() => {
     let cancelled = false;
@@ -264,6 +266,23 @@ export default function App() {
           </section>
         </aside>
       </main>
+
+      {guestbookEntries.length > 0 && (
+        <section className="guestbook-panel" aria-labelledby="guestbook-title">
+          <div className="guestbook-header">
+            <h2 id="guestbook-title">Guestbook</h2>
+            <span>{guestbookEntries.length}/7 nights signed</span>
+          </div>
+          <div className="guestbook-list">
+            {guestbookEntries.map((entry) => (
+              <article className="guestbook-entry" key={entry.id}>
+                <p>{entry.quote}</p>
+                <footer>- {entry.signature}</footer>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <footer className="site-footer">
         Made by{" "}

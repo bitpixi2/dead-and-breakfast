@@ -12,7 +12,20 @@ You run a seaside hotel where every weary Normie visitor deserves prompt hospita
 - Normies token metadata and images are served from `api.normies.art`, also with manual entries that store that owner to send on-chain rewards.
 - Uses Normies Type traits as rules: Human, Zombie, Cat, Alien, and Agent each route differently.
 - Includes a complete 7 game days with patience timers, service stations, coins, misses, upgrades, and local save persistence.
+- The in-game Guestbook turns Normies API facts into playful lore, revealing one signed entry after each completed day.
 - Monochrome art direction to match Normies.
+
+## Guestbook
+
+Dead and Breakfast includes a seven-entry Guestbook that unlocks one note after each survived day. The entries are playful in-world blurbs from Normies visitors, but each one promotes a real Normies API or Canvas fact: burned Normies, live Zombie counts, Canvas transforms, burn commitments, action points, and walletless reward tracking.
+
+Example:
+
+> I heard as of June 30, 2026, 2,603 Normies had been burned. That stressed me out, so I checked into D&B for a quiet breakfast.
+>
+> - Normie #5652
+
+The game uses already-loaded Canvas stats when available and falls back to a verified snapshot, so the Guestbook adds Normies flavor without repeatedly calling the API.
 
 ## In Progress
 
@@ -32,7 +45,7 @@ You run a seaside hotel where every weary Normie visitor deserves prompt hospita
 - Fetches `/normie/{tokenId}/metadata` for live trait data.
 - Uses `/normie/{tokenId}/image.svg` for guest portraits.
 - Reads Type, Level, Action Points, and Customized traits.
-- Fetches Canvas history stats when available.
+- Fetches Canvas history stats when available and reuses them for Guestbook lore.
 - Caches API responses locally and preserves a tested fallback path.
 
 ## Tech Stack

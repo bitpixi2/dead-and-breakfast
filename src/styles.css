@@ -293,6 +293,75 @@ h2 {
   background: #e5e7e6;
 }
 
+.guestbook-panel {
+  position: relative;
+  z-index: 1;
+  max-width: 1678px;
+  margin: 12px auto 0;
+  border: 2px solid rgba(72, 73, 75, 0.32);
+  border-radius: 4px;
+  background: rgba(248, 249, 247, 0.9);
+  color: var(--ink);
+  padding: 12px 14px;
+}
+
+.guestbook-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid rgba(72, 73, 75, 0.18);
+  padding-bottom: 8px;
+}
+
+.guestbook-header h2 {
+  margin: 0;
+  font-family: "GeistMono", "Courier New", monospace;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.guestbook-header span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.guestbook-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.guestbook-entry {
+  min-height: 118px;
+  border: 2px solid rgba(72, 73, 75, 0.18);
+  background:
+    linear-gradient(rgba(72, 73, 75, 0.07) 1px, transparent 1px),
+    #fff;
+  background-size: 100% 18px;
+  padding: 10px;
+}
+
+.guestbook-entry p {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.guestbook-entry footer {
+  margin-top: 8px;
+  color: var(--pixel);
+  font-family: "GeistMono", "Courier New", monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-align: right;
+}
+
 .site-footer {
   position: relative;
   z-index: 1;
@@ -443,6 +512,25 @@ h2 {
     margin-top: 10px;
     padding: 9px 10px;
     font-size: 0.74rem;
+  }
+
+  .guestbook-panel {
+    margin-top: 10px;
+    padding: 10px;
+  }
+
+  .guestbook-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .guestbook-list {
+    grid-template-columns: 1fr;
+  }
+
+  .guestbook-entry {
+    min-height: 0;
   }
 
   .legal-modal {
@@ -628,6 +716,10 @@ h2 {
   }
 
   .site-footer {
+    display: none;
+  }
+
+  .guestbook-panel {
     display: none;
   }
 }
